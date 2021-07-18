@@ -1,0 +1,69 @@
+<template>
+  <require from="../status/status.line"></require>
+
+  <div class="container bg-light p-md-4">
+    <!-- <div class="row">
+         <div class="col mb-5">
+         <b class="text text-primary">Status: </b><span id="status" innerhtml.one-way="status"></span>
+         </div>
+         </div> -->
+    <div class="row">
+      <div class="col">
+        <form>
+          <div class="row">
+            <!-- Data file -->
+            <div class="col">
+              <label for="file">Data file</label>
+              <input type="file" class="form-control-file" id="file" aria-describedby="fileDescription" files.bind="uploadFiles">
+              <small id="fileDescription" class="form-text text-muted">The file to upload - this is your dataset</small>
+            </div>
+
+            <!-- Header data -->
+            <div class="col">
+
+              <label repeat.for="headerOption of headerOptions">
+                <input id="headerOption${headerOption.id}" type="radio" name="group1"
+                  model.bind="headerOption.id" checked.bind="selectedHeaderOptionId">
+                ${headerOption.description}
+              </label>
+
+              <br>
+            </div>
+
+            <div class="col">
+              <input class="form-control" type="text" id="csvSeparator" aria-describedby="csvDelimiterDescription" value.two-way="delimiter">
+              <small id="csvDelimiterDescription" class="form-text text-muted">CSV Delimiter</small>
+              <br>
+
+              <!-- <select class="form-control" id="localeSelect" aria-describedby="localSelectDescription">
+                   <option>de-AT</option>
+                   <option>en-US</option>
+                   </select>
+                   <small id="localSelectDescription" class="form-text text-muted">Locale</small> -->
+            </div>
+          </div>
+          <!-- Specify features (file contains no header) -->
+          <div class="row p-2 m-1" if.bind="selectedHeaderOptionId == 0">
+            <div class="col">
+              <b>Specify the features by name, separated by commas - in the same order as they are in the data file:</b>
+              <input class="form-control" type="text" id="featuresManually" value.two-way="featuresCSVString">
+            </div>
+          </div>
+          <hr>
+          <button type="submit" class="btn btn-primary" click.trigger="uploadFile()">Upload file</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Uploaded file headers -->
+
+    <hr>
+    <p class="bg-primary p-2 text-white">File data</p>
+    Row count: <span id="row-count"></span><br>
+
+    Features:
+    <ul id="features"></ul>
+  </div>
+
+  <status-line view-model.ref="statusLine"></status-line>
+</template>

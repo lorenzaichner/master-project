@@ -1,0 +1,186 @@
+<template>
+  <require from="../status/status.line"></require>
+  <div class="container-fluid">
+    <div class="row bg-success">
+      <div class="col">
+        Options:
+        <span class="m-2">
+          <input id="selectGraphFile" class="m-2" type="radio" name="graphFileOptions" model.bind="0" checked.bind="selectedGraphOption">Upload a graph file
+        </span>
+        <span class="m-2">
+          <input id="selectGraphEdit" class="m-2" type="radio" name="graphFileOptions" model.bind="1" checked.bind="selectedGraphOption" checked>Edit the graph here
+        </span>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-8">
+        <div ref="graph" if.bind="selectedGraphOption === 1" style.bind="graphStyle"></div>
+        <div if.bind="selectedGraphOption === 0" class="m-3 p-3 bg bg-light border border-primary">
+          <label for="file">Graph file</label>
+          <input type="file" class="form-control-file" id="file" aria-describedby="fileDescription" files.bind="uploadFiles">
+          <small id="fileDescription" class="form-text text-muted">Custom graph file to upload</small>
+          <!-- <button type="submit" class="btn btn-primary" click.trigger="uploadFile()">Upload file</button> -->
+        </div>
+      </div>
+
+      <div class="col overflow-auto" style="height: 90vh;">
+        <!-- TODO: probably needs to be cleaned up -->
+        <!-- <b>Nodes</b><br>
+             <button class="btn btn-primary m-1" click.delegate="addNode()">Add</button><br>
+                  <button class="btn btn-primary m-1" click.delegate="addCommonCauseNode()">Add common cause</button><br>
+             <button class="btn btn-primary m-1" click.delegate="addIVNode()">Add instrumental variable</button><br>
+        <hr> -->
+
+        <div if.bind="selectedGraphOption === 1" class="d-block bg-dark text-white p-1 mb-1">Edges</div>
+        <div if.bind="selectedGraphOption === 1" class="d-block border p-1 bg-light">
+          <button class="btn btn-primary btn-sm m-1"" click.delegate="removeSelectedEdges()">Remove selected</button>
+          <button class="btn btn-primary btn-sm m-1"" click.delegate="linkCommonConfoundersToTreatmentAndOutcome()">Connect confounders to treatment and outcome</button>
+          <hr>
+
+          <div class="row">
+            <div class="col">
+              <select id="addEdgeNodeIdFrom" value.bind="addEdgeNodeIdFrom">
+                <option model.bind="null">From node...</option>
+                <option repeat.for="feature of features" model.bind="feature">${feature}</option>
+              </select>
+            </div>
+            <div class="col">
+              <select id="addEdgeNodeIdTo" value.bind="addEdgeNodeIdTo">
+                <option model.bind="null">To node...</option>
+                <option repeat.for="feature of features" model.bind="feature">${feature}</option>
+              </select>
+            </div>
+            <div class="col">
+              <button id="addEdgeBtn" class="btn btn-primary btn-sm m-0"" click.delegate="addEdge()">Add</button><br>
+            </div>
+          </div>
+        </div>
+        <hr>
+
+        <div class="d-block bg-dark text-white p-1 mb-1">Model data</div>
+        <div class="d-block border p-1 bg-light">
+          <div class="row">
+            <div class="col">
+              <select id="treatment" value.bind="treatment">
+                <option model.bind="null">Choose treatment...</option>
+                <option repeat.for="feature of features" model.bind="feature">${feature}</option>
+              </select>
+            </div>
+            <div class="col">
+              <select id="outcome" value.bind="outcome">
+                <option model.bind="null">Choose outcome...</option>
+                <option repeat.for="feature of features" model.bind="feature">${feature}</option>
+              </select>
+            </div>
+          </div>
+          <hr>
+
+          <div class="row">
+            <div class="col">
+              <span>(Optional) Common causes</span>
+              <select id="commonCauses" value.bind="addCommonCauseCurrent">
+                <option model.bind="null">Choose common cause...</option>
+                <option repeat.for="feature of features" model.bind="feature">${feature}</option>
+              </select>
+              <button id="addCommonCause" class="btn btn-primary btn-sm mt-1" click.delegate="addCommonCause()">Add</button>
+            </div>
+            <div class="col">
+              <span>Current common causes:</span>
+              <div repeat.for="ccause of commonCauses" class="border-bottom border-primary p-1 mt-1">
+                <span>${ccause}</span>
+                <span class="bg-danger text-white px-2 float-right" click.delegate="removeCommonCause(ccause)">X</span>
+              </div>
+            </div>
+          </div>
+          <hr>
+
+          <div class="row">
+            <div class="col">
+              <span>(Optional) Instrumental variables (IVs)</span>
+              <select id="ivs" value.bind="addIVCurrent">
+                <option model.bind="null">Choose IV...</option>
+                <option repeat.for="feature of features" model.bind="feature">${feature}</option>
+              </select>
+              <button id="addIV" class="btn btn-primary btn-sm mt-1" click.delegate="addIV()">Add</button>
+            </div>
+            <div class="col">
+              <span>Current IVs:</span><br>
+              <div repeat.for="iv of ivs" class="border-bottom border-primary p-1 mt-1">
+                <span>${iv}</span>
+                <span class="bg-danger text-white px-2 float-right" click.delegate="removeIV(iv)">X</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr>
+
+        <div class="d-block bg-dark text-white p-1 mb-1">Select estimation methods</div>
+        <div class="row">
+          <div class="col-4">
+            <button class="btn btn-sm btn-secondary" click.delegate="selectAllMethods()">Select all</button>
+            <button class="btn btn-sm btn-secondary" click.delegate="deselectAllMethods()">Deselect all</button>
+          </div>
+          <div class="col">
+            <div class="border-bottom border-primary mb-2">
+              <input id="selectMethodRegression" type="checkbox" checked.two-way="selectedMethods.regression"><span class="ml-4">Regression</span>
+            </div>
+
+            <div class="border-bottom border-primary mb-2">
+              <input id="selectMethodStratification" type="checkbox" checked.two-way="selectedMethods.stratification"><span class="ml-4">Stratification</span>
+            </div>
+
+            <div class="border-bottom border-primary mb-2">
+              <input id="selectMethodMatching" type="checkbox" checked.two-way="selectedMethods.matching"><span class="ml-4">Matching</span>
+            </div>
+
+            <div class="border-bottom border-primary mb-2">
+              <input id="selectMethodWeighting" type="checkbox" checked.two-way="selectedMethods.weighting"><span class="ml-4">Weighting</span>
+            </div>
+
+            <div class="border-bottom border-primary mb-2">
+              <div class="row">
+                <div class="col">
+                  <input id="selectMethodIVs" type="checkbox" checked.two-way="selectedMethods.ivs"><span class="ml-4">Instrumental Variables</span>
+                </div>
+                <div class="col mb-3" if.bind="selectedMethods.ivs === true">
+                  Specify instrument:
+                  <select id="ivMethodInstrument" value.bind="ivMethodInstrument">
+                    <option model.bind="null">Choose...</option>
+                    <option repeat.for="feature of features" model.bind="feature">${feature}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-bottom border-primary mb-2">
+              <div class="row">
+                <div class="col">
+                  <input id="selectMethodRegDiscont" type="checkbox" checked.two-way="selectedMethods.regDiscont"><span class="ml-4">Regression Discontinuity</span>
+                </div>
+                <div class="col mb-3" if.bind="selectedMethods.regDiscont === true">
+                  Specify regression discontinuity variable name:
+                  <select id="regDiscontVarName" value.bind="regDiscontVarName">
+                    <option model.bind="null">Choose...</option>
+                    <option repeat.for="feature of features" model.bind="feature">${feature}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-bottom border-primary mb-2">
+              <input id="selectMethodTwoStageReg" type="checkbox" checked.two-way="selectedMethods.twoStageRegression"><span class="ml-4">Two stage regression (NDE & NIE)</span>
+            </div>
+          </div>
+        </div>
+
+        <button id="uploadBtn" class="btn btn-primary mt-3" click.delegate="upload()">Upload graph and get results</button>
+        <button class="btn btn-primary mt-3" click.delegate="downloadGraph()">Download graph</button>
+      </div>
+
+    </div>
+  </div>
+
+  <status-line view-model.ref="statusLine"></status-line>
+
+</template>

@@ -1,0 +1,34 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "module": "esnext",
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "sourceMap": true,
+    "target": "es2017",
+    "lib": [
+      "es2017",
+      "dom"
+    ],
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "paths": {
+      "common/*": ["../common/*"]
+    }
+  },
+  "include": [
+    "./src/**/*.ts",
+    "../common/**/*.ts",
+    "test"
+  ],
+  "atom": {
+    "rewriteTsconfig": false
+  }
+}

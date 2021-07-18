@@ -1,0 +1,34 @@
+version: "3.7"
+services:
+  redis:
+    container_name: cdi_redis
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  backend:
+    container_name: cdi_backend
+    build:
+      context: ./
+      dockerfile: ./backend/Dockerfile
+    command: npm run start
+    image: jovan_bakk/cdi_backend
+    depends_on:
+      - redis
+    ports:
+      - "3000:3000"
+        # volumes:
+        # - /usr/src/app/backend/node_modules
+
+  frontend:
+    container_name: cdi_frontend
+    build:
+      context: ./
+      dockerfile: ./frontend/Dockerfile
+    command: http-server dist
+    image: jovan_bakk/cdi_frontend
+    ports:
+      - "8080:8080"
+    volumes:
+      - /usr/src/app/node_modules
+

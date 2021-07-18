@@ -1,0 +1,7 @@
+{
+  "debug": true,
+  "testing": true,
+  "Api": {
+    "BaseUrl": "http://localhost:3000"
+  }
+}

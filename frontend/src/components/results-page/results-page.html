@@ -1,0 +1,74 @@
+<template>
+  <require from="../status/status.line"></require>
+  <status-line view-model.ref="statusLine"></status-line>
+
+  <div class="container border-bottom border-dark mt-3">
+    <!-- ATE -->
+    <h3 class="border-bottom border-dark">ATE (Average treatment effect), via 6 different methods</h3>
+    <div class="row bg-light">
+      <div class="col">
+        <table class="table">
+          <thead>
+            <th>Method</th>
+            <th>Result</th>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Regression</td>
+              <td id="result-regression" innerhtml.one-way="regression"></td>
+            </tr>
+
+            <tr>
+              <td>Stratification</td>
+              <td id="result-stratification" innerhtml.one-way="stratification"></td>
+            </tr>
+
+            <tr>
+              <td>Matching</td>
+              <td id="result-matching" innerhtml.one-way="matching"></td>
+            </tr>
+
+            <tr>
+              <td>Weighting</td>
+              <td id="result-weighting" innerhtml.one-way="weighting"></td>
+            </tr>
+
+            <tr>
+              <td>Instrumental variables</td>
+              <td id="result-iv" innerhtml.one-way="iv"></td>
+            </tr>
+
+            <tr>
+              <td>Regression discontinuity</td>
+              <td id="result-reg-discont" innerhtml.one-way="regDiscont"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- NDE and NIE -->
+    <h3 class="mt-5 border-bottom border-dark">NDE and NIE (Natural direct/indirect effect), via two-stage regression</h3>
+    <div class="row bg-light border-dark">
+      <div class="col">
+        <table class="table mt-5">
+          <thead>
+            <th>Estimand type</th>
+            <th>Result</th>
+          </thead>
+          <tbody>
+            <tr>
+              <td>NDE</td>
+              <td id="result-nde" innerhtml.one-way="nde"></td>
+            </tr>
+
+            <tr>
+              <td>NIE</td>
+              <td id="result-nie" innerhtml.one-way="nie"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>

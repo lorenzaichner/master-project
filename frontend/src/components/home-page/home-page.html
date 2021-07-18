@@ -1,0 +1,22 @@
+<template>
+  <div class="jumbotron">
+    <h1 class="display-4">Welcome!</h1>
+    <p>This tool is quite simple and intuitive to use, it is comprised of 3 pages, to which You can navigate using the menu at the top:
+      <ul>
+        <li class="mb-4"><span class="p-1 bg-dark text-white">Upload</span> - provide information about the data file and upload it. Proceed to the 'Upload' page after the file is successfully uploaded.</li>
+        <li class="mb-4"><span class="p-1 bg-dark text-white">Graph</span> - work on the causal graph and provide information for the last step - estimation. Proceed to the 'Results' page after the graph is successfully uploaded.
+          <div class="border bg-light w-50 m-2 p-1">
+            <b>Tip:</b><br>
+            <ul>
+              <li>You can add edges by selecting a node (from), holding down SHIFT, then selecting the second node (to) and clicking <span class="badge badge-primary">Add</span>.<br>
+                <i>(Note: if you hold SHIFT and select more than 2 nodes, an edge will be added only between the last two)</i></li>
+            </ul>
+          </div>
+        </li>
+        <li><span class="p-1 bg-dark text-white">Results</span> - view the results of causal estimation based on the data provided during previous steps.</li>
+      </ul>
+      Each page builds upon the previous one - the workflow is supposed to go in the same order as above.
+      You can navigate to a previous step if something needs to be changed of course, e.g. going from the 'Results' page back to 'Graph' to add/remove edges.
+    </p>
+  </div>
+</template>

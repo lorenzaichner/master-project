@@ -1,0 +1,12 @@
+{
+  "Upload": {
+    "StorageDir": "storage/uploaded/"
+  },
+  "Session": {
+    "Length": 32,
+    "JWTKey": "5up3r_54f3_53cr37_k3y"
+  },
+  "Results": {
+    "RedisExpireSeconds": 120
+  }
+}
