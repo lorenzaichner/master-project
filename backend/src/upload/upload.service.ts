@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { promises as fs, writeFileSync } from 'fs';
+import { promises as fs, writeFileSync, createWriteStream } from 'fs';
 import * as config from 'config';
 import * as csv_parse from 'csv-parse/lib/sync';
-import { GraphUploadDto } from './upload.dto';
+import {GraphUploadDto, UrlFileUploadDto} from './upload.dto';
 import * as tmp from 'tmp';
 import { AppError } from 'src/errors/app.error';
 import { Logger } from 'src/log/logger';
 import { GraphUtil } from 'common/util/GraphUtil';
+import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
 
 const FILE_DIR = config.get<string>('Upload.StorageDir');
 // both at the same dir, at least for now
@@ -85,7 +86,7 @@ export class UploadService {
       }
       let rowIndex = 0;
       const res = csv_parse(buf, {
-        delimiter: delimiter,
+        delimiter,
         on_record: rec => {
           const hasEmptyColumn = rec.find(v => v.length == 0) != null;
           if(hasEmptyColumn) {
@@ -123,5 +124,22 @@ export class UploadService {
   public async transformAndSaveGraph(session: string, graphDto: GraphUploadDto): Promise<void> {
     const data = GraphUtil.graphFromNodesAndEdges(graphDto.nodes, graphDto.edges);
     await fs.writeFile(this.getGraphFilePath(session), data);
+  }
+
+  public async loadFile(urlFileUploadDto: UrlFileUploadDto, session: string): Promise<{ rowCount: number, features: string[] }> {
+    const axiosConfig: AxiosRequestConfig = {
+      responseType:'arraybuffer'
+    };
+    try {
+      const response = await axios.get(urlFileUploadDto.url, axiosConfig);
+      const fileData: Buffer = response.data;
+      await this.saveFile(session, fileData);
+      return this.parseFileAndGetFeatures(session, fileData,
+                                          urlFileUploadDto.delimiter, parseInt(urlFileUploadDto.headerRowCount, 10),
+                                          urlFileUploadDto.features);
+    } catch (error) {
+      throw AppError.fromName('URL_FILE_UPLOAD_ERROR');
+    }
+
   }
 }

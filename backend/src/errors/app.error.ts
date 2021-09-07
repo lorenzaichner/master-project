@@ -4,7 +4,8 @@ export type AppErrorName =
   'DATA_FILE_INCONSISTENT_RECORD_LENGTH' |
   'DATA_FILE_SAVE_FAIL' |
   'GRAPH_FILE_SAVE_FAIL' |
-  'GRAPH_DATA_INVALID'
+  'GRAPH_DATA_INVALID' |
+  'URL_FILE_UPLOAD_ERROR'
 ;
 type AppErrorsType = {
   [prop in AppErrorName]: {
@@ -42,7 +43,12 @@ const AppErrors: AppErrorsType = {
     message: 'graph-describing data is not valid (probably not a valid JSON string)',
     status: 400,
   },
-}
+  URL_FILE_UPLOAD_ERROR: {
+    name: 'URL_FILE_UPLOAD_ERROR',
+    message: 'Failed to load file from the link',
+    status:400
+  }
+};
 
 export class AppError extends Error {
   public name: string;

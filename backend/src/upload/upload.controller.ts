@@ -1,12 +1,13 @@
-import { Body, Get, Post, Controller, UseInterceptors, UploadedFile, Query } from '@nestjs/common';
+import { Body, Post, Controller, UseInterceptors, UploadedFile, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { FileUploadedResponse } from 'common/response/upload/upload.response';
-import { FileUploadQueryDto, GraphUploadDto, ExternalGraphFileUploadDto } from './upload.dto';
+import {FileUploadQueryDto, GraphUploadDto, ExternalGraphFileUploadDto, UrlFileUploadDto} from './upload.dto';
 import { SuccessResponse } from 'common/response/basic.response';
 import { ResultsService } from 'src/results/results.service';
 import { Session } from 'src/decorators/session.decorator';
 import { AppError } from 'src/errors/app.error';
+import {Logger} from '../log/logger';
 
 @Controller('/upload')
 export class UploadController {
@@ -22,7 +23,8 @@ export class UploadController {
   ): Promise<FileUploadedResponse> {
     await this.uploadService.saveFile(session, file.buffer);
     return {
-      data: await this.uploadService.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter, parseInt(queryDto.headerRowCount, 10), queryDto.features),
+      data: await this.uploadService.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter,
+          parseInt(queryDto.headerRowCount, 10), queryDto.features),
       success: true
     };
   }
@@ -54,7 +56,6 @@ export class UploadController {
     return { success: true };
   }
 
-
   @Post('/graph')
   @UseInterceptors(FileInterceptor('file'))
   public async handleGraphUpload(
@@ -74,5 +75,17 @@ export class UploadController {
       }
     );
     return { success: true };
+  }
+
+  @Post('/url')
+  public async handleUrlUpload(
+      @Body() urlFileUploadDto: UrlFileUploadDto,
+      @Session() session: string
+  ): Promise<FileUploadedResponse> {
+    Logger.getInstance().log('info', urlFileUploadDto);
+    return {
+      data: await this.uploadService.loadFile(urlFileUploadDto, session),
+      success: true
+    };
   }
 }

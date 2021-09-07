@@ -1,4 +1,4 @@
-import { ApiService } from 'components/api.service';
+import { ApiService } from '../api.service';
 import { FileUploadedResponse } from 'common/response/upload/upload.response';
 import { IFileUploadQueryDto, IGraphUploadDto } from 'common/dto/file.upload';
 import { StringifiableRecord } from 'query-string';

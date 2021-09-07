@@ -32,3 +32,7 @@ export interface IExternalGraphFileUploadDto {
   };
   selectedMethods: string;
 }
+
+export interface IUrlFileUploadDto {
+  url: string;
+}
