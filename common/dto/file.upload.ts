@@ -35,4 +35,7 @@ export interface IExternalGraphFileUploadDto {
 
 export interface IUrlFileUploadDto {
   url: string;
+  delimiter: string;
+  headerRowCount: string;
+  features?: string[];
 }

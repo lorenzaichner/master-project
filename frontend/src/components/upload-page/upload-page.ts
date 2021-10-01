@@ -1,11 +1,11 @@
-import { inject, observable } from 'aurelia-framework';
-import { UploadService } from './upload.service'
+import {inject, observable} from 'aurelia-framework';
+import {UploadService} from './upload.service'
 import $ from 'jquery';
-import { UploadPageState } from './upload-page.state';
-import { GlobalState } from '../global.state';
-import { FileUploadedResponse } from 'common/response/upload/upload.response';
-import { GraphState } from '../graph/graph.state';
-import { StatusLine } from '../status/status.line';
+import {UploadPageState} from './upload-page.state';
+import {GlobalState} from '../global.state';
+import {FileUploadedResponse} from 'common/response/upload/upload.response';
+import {GraphState} from '../graph/graph.state';
+import {StatusLine} from '../status/status.line';
 
 export interface IUploadPage {
   uploadFiles?: FileList;
@@ -20,12 +20,23 @@ export class UploadPage {
   uploadFiles: FileList;
   status = 'idle';
   @observable delimiter = ',';
-  rowCount =  0;
+  @observable uploadTypeId = 0;
+  @observable urlPath = '';
+
+  rowCount = 0;
   uploadStatus = '';
   statusLine: StatusLine;
   // when the file contains no header and the user need to specify the features
   featuresCSVString!: string | null;
-
+  uploadOptions = [{
+    id: 0,
+    name: 'File upload'
+  },
+    {
+      id: 1,
+      name: 'Download from a link'
+    }
+  ]
   headerOptions = [
     {
       id: 0,
@@ -43,14 +54,15 @@ export class UploadPage {
 
   @observable selectedHeaderOptionId = 1;
 
-  constructor(private uploadService: UploadService, private uploadPageState: UploadPageState) {}
+  constructor(private uploadService: UploadService, private uploadPageState: UploadPageState) {
+  }
 
   attached() {
     this.loadFromState('status');
 
-    if(this.uploadPageState.fileData != null) {
+    if (this.uploadPageState.fileData != null) {
       const fileData = this.uploadPageState.fileData;
-      if(fileData !== undefined) {
+      if (fileData !== undefined) {
         this.rowCount = fileData.rowCount;
         $("#row-count").html(this.rowCount);
         $("#features").html(fileData.features.map(f => `<li>${f}</li>`));
@@ -67,11 +79,11 @@ export class UploadPage {
 
   private loadFromState(data: keyof IUploadPage): void {
     let stateData = <IUploadPage[keyof IUploadPage]>this.uploadPageState.get(data);
-    if(stateData !== undefined) {
+    if (stateData !== undefined) {
       this[<any>data] = stateData;
     }
-    if(data === 'status') {
-      if(stateData === undefined) {
+    if (data === 'status') {
+      if (stateData === undefined) {
         stateData = 'idle';
       }
       this.statusLine.setStatus(<string>stateData);
@@ -79,19 +91,81 @@ export class UploadPage {
   }
 
   private selectedHeaderOptionIdChanged(newVal: string, oldVal?: string): void {
-    if(oldVal !== undefined) {
+    if (oldVal !== undefined) {
       this.uploadPageState.set('selectedHeaderOptionId', newVal);
     }
   }
 
   private delimiterChanged(newVal: string, oldVal?: string): void {
-    if(oldVal !== undefined) {
+    if (oldVal !== undefined) {
       this.uploadPageState.set('delimiter', newVal);
     }
   }
 
+  private async startOperation(): Promise<void> {
+    if (this.uploadTypeId === 0){
+      await this.uploadFile();
+    }
+    else if(this.uploadTypeId === 1){
+      await this.getTheFileFromUrl();
+    }else{
+      console.error(`The selected upload type is not supported.`)
+    }
+  }
+
+  private async getTheFileFromUrl(): Promise<void> {
+    if (this.urlPath === '') {
+      this.setErrorStatus('Please submit url.');
+      return;
+    }
+    let fileData;
+    try {
+      let features: string[] | undefined = undefined;
+      if (this.selectedHeaderOptionId === 0) {
+        // character, comma, character is the shortest possible option of features
+        if (this.featuresCSVString == null || this.featuresCSVString.length < 3 || !this.featuresCSVString.includes(',')) {
+          this.setErrorStatus('Please input a valid value for the features');
+          return;
+        }
+        features = this.featuresCSVString.split(',');
+      }
+      fileData = await this.uploadService.submitLink(this.urlPath, this.delimiter, this.selectedHeaderOptionId, features);
+      GlobalState.dataFileUploaded = true;
+      GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
+    } catch (ex) {
+      this.setErrorStatus(ex.message);
+      return;
+    }
+
+    $("#row-count").html(fileData.rowCount);
+    const featuresList = [];
+    const nodes = [];
+    GlobalState.features = [];
+    for (const f of fileData.features) {
+      featuresList.push(`<li>${f}</li>`);
+      GlobalState.features.push(f);
+      nodes.push({
+        data: {id: f}
+      });
+    }
+    $("#features").html(featuresList);
+    this.uploadPageState.fileData = {
+      rowCount: fileData.rowCount,
+      features: fileData.features.slice(0),
+    };
+    this.setStatus(`Uploaded from: '${this.urlPath}'`);
+    GraphState.nodes = nodes.slice(0);
+    GraphState.layout.rows = Math.sqrt(fileData.features.length);
+    GraphState.modelData = {
+      treatment: null,
+      outcome: null,
+      commonCauses: [],
+      ivs: [],
+    };
+  }
+
   private async uploadFile(): Promise<void> {
-    if(this.uploadFiles == null || this.uploadFiles[0] == null) {
+    if (this.uploadFiles == null || this.uploadFiles[0] == null) {
       this.setErrorStatus('no file selected. Please select a file to upload.');
       return;
     }
@@ -103,9 +177,9 @@ export class UploadPage {
     let fileData;
     try {
       let features: string[] | undefined = undefined;
-      if(this.selectedHeaderOptionId === 0) {
+      if (this.selectedHeaderOptionId === 0) {
         // character, comma, character is the shortest possible option of features
-        if(this.featuresCSVString == null || this.featuresCSVString.length < 3 || !this.featuresCSVString.includes(',')) {
+        if (this.featuresCSVString == null || this.featuresCSVString.length < 3 || !this.featuresCSVString.includes(',')) {
           this.setErrorStatus('Please input a valid value for the features');
           return;
         }
@@ -124,11 +198,11 @@ export class UploadPage {
     const featuresList = [];
     const nodes = [];
     GlobalState.features = [];
-    for(const f of fileData.features) {
+    for (const f of fileData.features) {
       featuresList.push(`<li>${f}</li>`);
       GlobalState.features.push(f);
       nodes.push({
-        data: { id: f }
+        data: {id: f}
       });
     }
     $("#features").html(featuresList);

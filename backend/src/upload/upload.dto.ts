@@ -1,4 +1,9 @@
-import {IExternalGraphFileUploadDto, IFileUploadQueryDto, IGraphUploadDto, IUrlFileUploadDto} from 'common/dto/file.upload';
+import {
+    IExternalGraphFileUploadDto,
+    IFileUploadQueryDto,
+    IGraphUploadDto,
+    IUrlFileUploadDto
+} from 'common/dto/file.upload';
 import {IsNumberString, IsOptional, IsString} from 'class-validator';
 
 export class FileUploadQueryDto implements IFileUploadQueryDto {

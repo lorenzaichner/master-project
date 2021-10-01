@@ -13,9 +13,28 @@
           <div class="row">
             <!-- Data file -->
             <div class="col">
-              <label for="file">Data file</label>
-              <input type="file" class="form-control-file" id="file" aria-describedby="fileDescription" files.bind="uploadFiles">
-              <small id="fileDescription" class="form-text text-muted">The file to upload - this is your dataset</small>
+
+              <label>
+                Choose way to submit dataset:<br>
+                <select value.bind="uploadTypeId">
+                  <option repeat.for="uploadOption of uploadOptions"
+                          model.bind="uploadOption.id">
+                    ${uploadOption.name}
+                  </option>
+                </select>
+              </label>
+              <div if.bind="uploadTypeId === 0">
+                <label for="file">Data file</label>
+                <input type="file" class="form-control-file" id="file" aria-describedby="fileDescription"
+                       files.bind="uploadFiles">
+                <small id="fileDescription" class="form-text text-muted">The file to upload - this is your
+                  dataset</small>
+              </div>
+              <div if.bind="uploadTypeId === 1">
+                <label>Link to file: </label>
+                <input type="url" value.bind="urlPath">
+              </div>
+
             </div>
 
             <!-- Header data -->
@@ -23,7 +42,7 @@
 
               <label repeat.for="headerOption of headerOptions">
                 <input id="headerOption${headerOption.id}" type="radio" name="group1"
-                  model.bind="headerOption.id" checked.bind="selectedHeaderOptionId">
+                       model.bind="headerOption.id" checked.bind="selectedHeaderOptionId">
                 ${headerOption.description}
               </label>
 
@@ -31,7 +50,8 @@
             </div>
 
             <div class="col">
-              <input class="form-control" type="text" id="csvSeparator" aria-describedby="csvDelimiterDescription" value.two-way="delimiter">
+              <input class="form-control" type="text" id="csvSeparator" aria-describedby="csvDelimiterDescription"
+                     value.two-way="delimiter">
               <small id="csvDelimiterDescription" class="form-text text-muted">CSV Delimiter</small>
               <br>
 
@@ -50,7 +70,7 @@
             </div>
           </div>
           <hr>
-          <button type="submit" class="btn btn-primary" click.trigger="uploadFile()">Upload file</button>
+          <button type="submit" class="btn btn-primary" click.trigger="startOperation()">Upload file</button>
         </form>
       </div>
     </div>

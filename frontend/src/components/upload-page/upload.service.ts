@@ -1,6 +1,6 @@
 import { ApiService } from '../api.service';
 import { FileUploadedResponse } from 'common/response/upload/upload.response';
-import { IFileUploadQueryDto, IGraphUploadDto } from 'common/dto/file.upload';
+import {IFileUploadQueryDto, IGraphUploadDto, IUrlFileUploadDto} from 'common/dto/file.upload';
 import { StringifiableRecord } from 'query-string';
 import { SessionService } from '../session/session.service';
 
@@ -45,5 +45,20 @@ export class UploadService {
       undefined,
       headers,
     );
+  }
+
+  public async submitLink(url:string, delimiter:string, headerRowCount:number, features?: string[]): Promise<FileUploadedResponse['data'] | { errorMessage: string }>{
+    const headers = {
+      'Content-Type': 'application/json',
+      session: await SessionService.ensureSession(),
+    }
+    const requestBody: IUrlFileUploadDto = {url, delimiter, headerRowCount: headerRowCount.toString(), features };
+    const result = await ApiService.post<FileUploadedResponse>(
+      '/upload/url',
+      JSON.stringify(requestBody),
+      undefined,
+      headers
+    )
+    return result.data;
   }
 }
