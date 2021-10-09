@@ -1,14 +1,8 @@
-import {Body, Post, Controller, UseInterceptors, UploadedFile, Query} from '@nestjs/common';
+import {Body, Controller, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {UploadService} from './upload.service';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
-import {
-    FileUploadQueryDto,
-    GraphUploadDto,
-    ExternalGraphFileUploadDto,
-    UrlFileUploadDto,
-    GenerateLinearDatasetDto
-} from './upload.dto';
+import {ExternalGraphFileUploadDto, FileUploadQueryDto, GraphUploadDto, UrlFileUploadDto} from './upload.dto';
 import {SuccessResponse} from 'common/response/basic.response';
 import {ResultsService} from 'src/results/results.service';
 import {Session} from 'src/decorators/session.decorator';
@@ -28,10 +22,9 @@ export class UploadController {
         @Query() queryDto: FileUploadQueryDto,
         @Session() session: string,
     ): Promise<FileUploadedResponse> {
-        await this.uploadService.saveFile(session, file.buffer);
+        Logger.getInstance().log('info', queryDto);
         return {
-            data: await this.uploadService.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter,
-                parseInt(queryDto.headerRowCount, 10), queryDto.features),
+            data: await this.uploadService.uploadFile(queryDto, session, file),
             success: true
         };
     }
@@ -91,18 +84,30 @@ export class UploadController {
     ): Promise<FileUploadedResponse> {
         Logger.getInstance().log('info', urlFileUploadDto);
         return {
-            data: await this.uploadService.loadFile(urlFileUploadDto, session),
+            data: await this.uploadService.getFileFromLink(urlFileUploadDto, session),
             success: true
         };
     }
 
-    @Post('/generate/linear')
-    public async handleGenerateDataset(@Body() generateLinearDatasetDto: GenerateLinearDatasetDto,
-                                       @Session() session: string): Promise<FileUploadedResponse> {
-        Logger.getInstance().log('info', generateLinearDatasetDto);
+    @Post('/full-file')
+    public async loadFullFile(
+        @Session() session: string,
+        @Body() queryDto: FileUploadQueryDto,
+    ): Promise<FileUploadedResponse> {
+        Logger.getInstance().log('info', `Received request for full file for session: ${session} `);
         return {
-            data: await this.uploadService.generateLinearDataset(generateLinearDatasetDto, session),
+            data: await this.uploadService.loadFullFile(session, queryDto),
             success: true
         };
     }
+
+    /* @Post('/generate/linear')
+     public async handleGenerateDataset(@Body() generateLinearDatasetDto: GenerateLinearDatasetDto,
+                                        @Session() session: string): Promise<FileUploadedResponse> {
+         Logger.getInstance().log('info', generateLinearDatasetDto);
+         return {
+             data: await this.uploadService.generateLinearDataset(generateLinearDatasetDto, session),
+             success: true
+         };
+     }*/
 }

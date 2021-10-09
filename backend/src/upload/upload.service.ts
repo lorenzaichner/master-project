@@ -2,12 +2,10 @@ import {Injectable} from '@nestjs/common';
 import {promises as fs} from 'fs';
 import * as config from 'config';
 import * as csv_parse from 'csv-parse/lib/sync';
-import {GenerateLinearDatasetDto, GraphUploadDto, UrlFileUploadDto} from './upload.dto';
+import {FileUploadQueryDto, GraphUploadDto, UrlFileUploadDto} from './upload.dto';
 import {AppError} from 'src/errors/app.error';
 import {GraphUtil} from 'common/util/GraphUtil';
 import axios, {AxiosRequestConfig} from 'axios';
-import {spawn} from 'child_process';
-import {Logger} from '../log/logger';
 
 const FILE_DIR = config.get<string>('Upload.StorageDir');
 // both at the same dir, at least for now
@@ -40,7 +38,7 @@ export class UploadService {
         return Buffer.concat([buf.slice(0, targetLineStartOffset), buf.slice(targetLineEndOffset, buf.length)]);
     }
 
-    public async saveFile(session: string, file: Buffer): Promise<void> {
+    private async saveFile(session: string, file: Buffer): Promise<void> {
         const dataFilePath = this.getDataFilePath(session);
         try {
             await fs.writeFile(dataFilePath, file);
@@ -74,13 +72,14 @@ export class UploadService {
      * @param fileBuffer buffer containing file data
      * @param delimiter  value delimiter
      * @param headerRowCount number of rows for header
+     * @param getFullFile boolean indicating whether we need full table or just head
      * @param features might be there if the user specifies them (file contains no header)
      */
-    public async parseFileAndGetFeatures(session: string, fileBuffer: Buffer, delimiter: string, headerRowCount: number,
-                                         features?: string[]): Promise<{ rowCount: number, features: string[], head: string[][] }> {
+    private async parseFileAndGetFeatures(session: string, fileBuffer: Buffer, delimiter: string, headerRowCount: number, getFullFile: boolean,
+                                          features?: string[]): Promise<{ rowCount: number, features: string[], head: string[][] }> {
         try {
             let buf = fileBuffer;
-            if (features != null) {
+            if (features !== null) {
                 buf = Buffer.concat([Buffer.from(`${features.join(delimiter)}\n`), fileBuffer]);
                 await this.saveFile(session, buf);
             }
@@ -106,7 +105,7 @@ export class UploadService {
             if (rowCount < 5) {
                 headSize = rowCount;
             }
-            const tableHead = res.slice(headerRowCount, headerRowCount + headSize);
+            const tableHead = getFullFile ? res.slice(headerRowCount) : res.slice(headerRowCount, headerRowCount + headSize);
             if (features !== undefined) {
                 return {rowCount, features, head: tableHead};
             }
@@ -117,7 +116,6 @@ export class UploadService {
                 }
                 return {rowCount, features: generatedFeatures, head: tableHead};
             }
-
             return {rowCount, features: res[0], head: tableHead};
         } catch (ex) {
             const inconsistentRecordLength = ex.code === 'CSV_INCONSISTENT_RECORD_LENGTH';
@@ -136,7 +134,15 @@ export class UploadService {
         await fs.writeFile(this.getGraphFilePath(session), data);
     }
 
-    public async loadFile(urlFileUploadDto: UrlFileUploadDto, session: string): Promise<{ rowCount: number, features: string[] }> {
+    public async uploadFile(queryDto: FileUploadQueryDto, session: string, file: Express.Multer.File):
+        Promise<{ rowCount: number, features: string[], head: string[][] }> {
+        await this.saveFile(session, file.buffer);
+        return this.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter,
+            parseInt(queryDto.headerRowCount, 10), false, queryDto.features);
+    }
+
+    public async getFileFromLink(urlFileUploadDto: UrlFileUploadDto, session: string):
+        Promise<{ rowCount: number, features: string[], head: string[][] }> {
         const axiosConfig: AxiosRequestConfig = {
             responseType: 'arraybuffer'
         };
@@ -145,15 +151,13 @@ export class UploadService {
             const fileData: Buffer = response.data;
             await this.saveFile(session, fileData);
             return this.parseFileAndGetFeatures(session, fileData,
-                urlFileUploadDto.delimiter, parseInt(urlFileUploadDto.headerRowCount, 10),
-                urlFileUploadDto.features);
+                urlFileUploadDto.delimiter, parseInt(urlFileUploadDto.headerRowCount, 10), false, urlFileUploadDto.features);
         } catch (error) {
             throw AppError.fromName('URL_FILE_UPLOAD_ERROR');
         }
-
     }
 
-    public async generateLinearDataset(generateLinearDatasetDto: GenerateLinearDatasetDto,
+    /*public async generateLinearDataset(generateLinearDatasetDto: GenerateLinearDatasetDto,
                                        session: string): Promise<{ rowCount: number, features: string[] }> {
         const path = this.getDataFilePath(session);
         const cwd = process.cwd();
@@ -175,5 +179,12 @@ export class UploadService {
             }
         });
         return null;
+    } */
+
+    public async loadFullFile(session: string, queryDto: FileUploadQueryDto): Promise<{ rowCount: number, features: string[], head: string[][] }> {
+        const path = this.getDataFilePath(session);
+        const fileBuffer = await fs.readFile(path);
+        return this.parseFileAndGetFeatures(session, fileBuffer, queryDto.delimiter,
+            parseInt(queryDto.headerRowCount, 10), true, queryDto.features);
     }
 }

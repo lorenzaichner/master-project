@@ -2,11 +2,6 @@
   <require from="../status/status.line"></require>
 
   <div class="container bg-light p-md-4">
-    <!-- <div class="row">
-         <div class="col mb-5">
-         <b class="text text-primary">Status: </b><span id="status" innerhtml.one-way="status"></span>
-         </div>
-         </div> -->
     <div class="row">
       <div class="col">
         <form>
@@ -54,12 +49,6 @@
                      value.two-way="delimiter">
               <small id="csvDelimiterDescription" class="form-text text-muted">CSV Delimiter</small>
               <br>
-
-              <!-- <select class="form-control" id="localeSelect" aria-describedby="localSelectDescription">
-                   <option>de-AT</option>
-                   <option>en-US</option>
-                   </select>
-                   <small id="localSelectDescription" class="form-text text-muted">Locale</small> -->
             </div>
           </div>
           <!-- Specify features (file contains no header) -->
@@ -79,10 +68,18 @@
 
     <hr>
     <p class="bg-primary p-2 text-white">File data</p>
-    Row count: <span id="row-count"></span><br>
+    <div if.bind="fileData !== undefined">Total number of rows is: ${fileData.rowCount}</div>
 
-    Features:
-    <ul id="features"></ul>
+    <div if.bind="fileData !== undefined">Features:</div>
+    <table id="featureTable" class="table">
+      <tr>
+        <th repeat.for="feature of fileData.features">${feature}</th>
+      </tr>
+      <tr repeat.for="row of fileData.head">
+        <td repeat.for="dataElement of row">${dataElement}</td>
+      </tr>
+    </table>
+    <button type="submit" class="btn btn-primary" click.trigger="loadRest()" if.bind="showLoadMoreButton === true">Load rest of data</button>
   </div>
 
   <status-line view-model.ref="statusLine"></status-line>

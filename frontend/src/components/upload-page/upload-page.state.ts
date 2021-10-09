@@ -3,6 +3,7 @@ import { IUploadPage } from "./upload-page";
 
 export class UploadPageState {
   private data: Map<keyof IUploadPage, IUploadPage[keyof IUploadPage]>;
+  public showLoadMoreButton: boolean;
 
   public fileData: FileUploadedResponse['data'] | null;
 

@@ -1,6 +1,5 @@
 import {inject, observable} from 'aurelia-framework';
 import {UploadService} from './upload.service'
-import $ from 'jquery';
 import {UploadPageState} from './upload-page.state';
 import {GlobalState} from '../global.state';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
@@ -23,7 +22,6 @@ export class UploadPage {
   @observable uploadTypeId = 0;
   @observable urlPath = '';
 
-  rowCount = 0;
   uploadStatus = '';
   statusLine: StatusLine;
   // when the file contains no header and the user need to specify the features
@@ -54,6 +52,10 @@ export class UploadPage {
 
   @observable selectedHeaderOptionId = 1;
 
+  @observable fileData = undefined;
+
+  @observable showLoadMoreButton = false;
+
   constructor(private uploadService: UploadService, private uploadPageState: UploadPageState) {
   }
 
@@ -62,10 +64,9 @@ export class UploadPage {
 
     if (this.uploadPageState.fileData != null) {
       const fileData = this.uploadPageState.fileData;
+      this.showLoadMoreButton = this.uploadPageState.showLoadMoreButton;
       if (fileData !== undefined) {
-        this.rowCount = fileData.rowCount;
-        $("#row-count").html(this.rowCount);
-        $("#features").html(fileData.features.map(f => `<li>${f}</li>`));
+        this.fileData = fileData;
       }
     }
 
@@ -103,13 +104,12 @@ export class UploadPage {
   }
 
   private async startOperation(): Promise<void> {
-    if (this.uploadTypeId === 0){
+    if (this.uploadTypeId === 0) {
       await this.uploadFile();
-    }
-    else if(this.uploadTypeId === 1){
+    } else if (this.uploadTypeId === 1) {
       await this.getTheFileFromUrl();
-    }else{
-      console.error(`The selected upload type is not supported.`)
+    } else {
+      this.setErrorStatus('The selected upload type is not supported.');
     }
   }
 
@@ -120,14 +120,13 @@ export class UploadPage {
     }
     let fileData;
     try {
-      let features: string[] | undefined = undefined;
+      let features = undefined;
       if (this.selectedHeaderOptionId === 0) {
-        // character, comma, character is the shortest possible option of features
-        if (this.featuresCSVString == null || this.featuresCSVString.length < 3 || !this.featuresCSVString.includes(',')) {
+        features = this.extractFeatures();
+        if (features === undefined) {
           this.setErrorStatus('Please input a valid value for the features');
           return;
         }
-        features = this.featuresCSVString.split(',');
       }
       fileData = await this.uploadService.submitLink(this.urlPath, this.delimiter, this.selectedHeaderOptionId, features);
       GlobalState.dataFileUploaded = true;
@@ -136,32 +135,7 @@ export class UploadPage {
       this.setErrorStatus(ex.message);
       return;
     }
-
-    $("#row-count").html(fileData.rowCount);
-    const featuresList = [];
-    const nodes = [];
-    GlobalState.features = [];
-    for (const f of fileData.features) {
-      featuresList.push(`<li>${f}</li>`);
-      GlobalState.features.push(f);
-      nodes.push({
-        data: {id: f}
-      });
-    }
-    $("#features").html(featuresList);
-    this.uploadPageState.fileData = {
-      rowCount: fileData.rowCount,
-      features: fileData.features.slice(0),
-    };
-    this.setStatus(`Uploaded from: '${this.urlPath}'`);
-    GraphState.nodes = nodes.slice(0);
-    GraphState.layout.rows = Math.sqrt(fileData.features.length);
-    GraphState.modelData = {
-      treatment: null,
-      outcome: null,
-      commonCauses: [],
-      ivs: [],
-    };
+    this.updatePageData(fileData, `Uploaded from: '${this.urlPath}'`, true);
   }
 
   private async uploadFile(): Promise<void> {
@@ -176,14 +150,13 @@ export class UploadPage {
 
     let fileData;
     try {
-      let features: string[] | undefined = undefined;
+      let features = undefined;
       if (this.selectedHeaderOptionId === 0) {
-        // character, comma, character is the shortest possible option of features
-        if (this.featuresCSVString == null || this.featuresCSVString.length < 3 || !this.featuresCSVString.includes(',')) {
+        features = this.extractFeatures();
+        if (features === undefined) {
           this.setErrorStatus('Please input a valid value for the features');
           return;
         }
-        features = this.featuresCSVString.split(',');
       }
       fileData = await this.uploadService.uploadFile(formData, this.delimiter, this.selectedHeaderOptionId, features);
       GlobalState.dataFileUploaded = true;
@@ -192,25 +165,50 @@ export class UploadPage {
       this.setErrorStatus(ex.message);
       return;
     }
+    this.fileData = undefined;
+    this.updatePageData(fileData, `Uploaded '${this.uploadFiles[0].name}'`, true);
+  }
 
-    // this.fileHeaders = headers.map(header => `<li>${header}</li>`);
-    $("#row-count").html(fileData.rowCount);
-    const featuresList = [];
+  private extractFeatures() {
+    let features: string[] | undefined = undefined;
+    // character, comma, character is the shortest possible option of features
+    if (this.featuresCSVString == null || this.featuresCSVString.length < 3 || !this.featuresCSVString.includes(',')) {
+      return features;
+    }
+    features = this.featuresCSVString.split(',');
+    return features;
+  }
+
+  /**
+   * Method which updates fileData attribute and global state objects
+   * Mutating state
+   * @param fileData
+   * @param statusMessage
+   * @param showLoadMoreButton
+   * @private
+   */
+  private updatePageData(fileData, statusMessage: string, showLoadMoreButton: boolean) {
+    console.log(fileData);
+    this.fileData = fileData;
+    this.showLoadMoreButton = showLoadMoreButton;
     const nodes = [];
     GlobalState.features = [];
+
     for (const f of fileData.features) {
-      featuresList.push(`<li>${f}</li>`);
       GlobalState.features.push(f);
       nodes.push({
         data: {id: f}
       });
     }
-    $("#features").html(featuresList);
+
+    this.uploadPageState.showLoadMoreButton = showLoadMoreButton;
     this.uploadPageState.fileData = {
       rowCount: fileData.rowCount,
       features: fileData.features.slice(0),
+      head: fileData.head.slice(0)
     };
-    this.setStatus(`Uploaded '${this.uploadFiles[0].name}'`);
+
+    this.setStatus(statusMessage);
     GraphState.nodes = nodes.slice(0);
     GraphState.layout.rows = Math.sqrt(fileData.features.length);
     GraphState.modelData = {
@@ -232,6 +230,14 @@ export class UploadPage {
     this.status = status;
     this.statusLine.setError(error);
     this.uploadPageState.set('status', status);
+  }
+
+  private async loadRest() {
+    let fileData = await this.uploadService.getFullFile(this.delimiter, this.selectedHeaderOptionId, undefined);
+    GlobalState.dataFileUploaded = true;
+    GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
+    this.fileData = undefined;
+    this.updatePageData(fileData, `Loaded the rest of the data`, false);
   }
 
 }

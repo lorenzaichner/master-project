@@ -5,6 +5,6 @@ export type FileUploadedResponse = SuccessResponse
     data: {
       rowCount: number,
       features: string[]
-      head?: string[][]
+      head: string[][]
     }
   };

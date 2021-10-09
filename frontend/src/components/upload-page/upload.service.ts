@@ -1,8 +1,8 @@
-import { ApiService } from '../api.service';
-import { FileUploadedResponse } from 'common/response/upload/upload.response';
+import {ApiService} from '../api.service';
+import {FileUploadedResponse} from 'common/response/upload/upload.response';
 import {IFileUploadQueryDto, IGraphUploadDto, IUrlFileUploadDto} from 'common/dto/file.upload';
-import { StringifiableRecord } from 'query-string';
-import { SessionService } from '../session/session.service';
+import {StringifiableRecord} from 'query-string';
+import {SessionService} from '../session/session.service';
 
 export class UploadService {
 
@@ -14,8 +14,8 @@ export class UploadService {
    * features specified only if the file contains no header, user specifies the features manually
    */
   public async uploadFile(data: FormData, delimiter: string, headerRowCount: number, features?: string[]): Promise<FileUploadedResponse['data'] | { errorMessage: string }> {
-    const headers = { session: await SessionService.ensureSession() };
-    const query: IFileUploadQueryDto = { delimiter, headerRowCount: headerRowCount.toString(), features };
+    const headers = {session: await SessionService.ensureSession()};
+    const query: IFileUploadQueryDto = {delimiter, headerRowCount: headerRowCount.toString(), features};
     const result = await ApiService.post<FileUploadedResponse>(
       '/upload/data',
       data,
@@ -38,7 +38,7 @@ export class UploadService {
   }
 
   public async uploadGraphFile(data: FormData): Promise<void> {
-    const headers = { session: await SessionService.ensureSession() };
+    const headers = {session: await SessionService.ensureSession()};
     await ApiService.post<FileUploadedResponse>(
       '/upload/graph-file',
       data,
@@ -47,18 +47,30 @@ export class UploadService {
     );
   }
 
-  public async submitLink(url:string, delimiter:string, headerRowCount:number, features?: string[]): Promise<FileUploadedResponse['data'] | { errorMessage: string }>{
+  public async submitLink(url: string, delimiter: string, headerRowCount: number, features?: string[]): Promise<FileUploadedResponse['data'] | { errorMessage: string }> {
     const headers = {
       'Content-Type': 'application/json',
       session: await SessionService.ensureSession(),
     }
-    const requestBody: IUrlFileUploadDto = {url, delimiter, headerRowCount: headerRowCount.toString(), features };
+    const requestBody: IUrlFileUploadDto = {url, delimiter, headerRowCount: headerRowCount.toString(), features};
     const result = await ApiService.post<FileUploadedResponse>(
       '/upload/url',
       JSON.stringify(requestBody),
       undefined,
       headers
     )
+    return result.data;
+  }
+
+  public async getFullFile(delimiter: string, headerRowCount: number, features?: string[]): Promise<FileUploadedResponse['data'] | { errorMessage: string }> {
+    const headers = {'Content-Type': 'application/json', session: await SessionService.ensureSession()};
+    const requestBody: IFileUploadQueryDto = {delimiter, headerRowCount: headerRowCount.toString(), features};
+    const result = await ApiService.post<FileUploadedResponse>(
+      '/upload/full-file',
+      JSON.stringify(requestBody),
+      undefined,
+      headers,
+    );
     return result.data;
   }
 }
