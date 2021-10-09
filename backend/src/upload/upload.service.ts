@@ -20,7 +20,7 @@ export class UploadService {
         //
     }
 
-    private removeLineFromFile(targetLine: number, buf: Buffer): Buffer {
+    private static removeLineFromFile(targetLine: number, buf: Buffer): Buffer {
         let targetLineStartOffset = 0;
         let targetLineEndOffset = 0;
         let currentLine = 1;
@@ -37,8 +37,7 @@ export class UploadService {
             }
             currentOffset++;
         }
-        const resultBuf = Buffer.concat([buf.slice(0, targetLineStartOffset), buf.slice(targetLineEndOffset, buf.length)]);
-        return resultBuf;
+        return Buffer.concat([buf.slice(0, targetLineStartOffset), buf.slice(targetLineEndOffset, buf.length)]);
     }
 
     public async saveFile(session: string, file: Buffer): Promise<void> {
@@ -71,10 +70,14 @@ export class UploadService {
     /**
      * get the CSV file header
      * \return number of read rows (without headers) and named features
+     * @param session current session of user
+     * @param fileBuffer buffer containing file data
+     * @param delimiter  value delimiter
+     * @param headerRowCount number of rows for header
      * @param features might be there if the user specifies them (file contains no header)
      */
     public async parseFileAndGetFeatures(session: string, fileBuffer: Buffer, delimiter: string, headerRowCount: number,
-                                         features?: string[]): Promise<{ rowCount: number, features: string[] }> {
+                                         features?: string[]): Promise<{ rowCount: number, features: string[], head: string[][] }> {
         try {
             let buf = fileBuffer;
             if (features != null) {
@@ -83,13 +86,13 @@ export class UploadService {
             }
             // second header row has to be dropped for now, it crashes the estimation
             if (headerRowCount === 2) {
-                await this.saveFile(session, this.removeLineFromFile(2, buf));
+                await this.saveFile(session, UploadService.removeLineFromFile(2, buf));
             }
             let rowIndex = 0;
             const res = csv_parse(buf, {
                 delimiter,
                 on_record: rec => {
-                    const hasEmptyColumn = rec.find(v => v.length == 0) != null;
+                    const hasEmptyColumn = rec.find(v => v.length === 0) != null;
                     if (hasEmptyColumn) {
                         throw AppError.fromName('DATA_FILE_EMPTY_COLUMN', [], `the provided data file contains rows with no values at certain columns at row ${rowIndex}`);
                     }
@@ -99,20 +102,26 @@ export class UploadService {
             });
 
             const rowCount = res.length - headerRowCount;
-            if (features != undefined) {
-                return {rowCount, features};
+            let headSize = 5;
+            if (rowCount < 5) {
+                headSize = rowCount;
+            }
+            const tableHead = res.slice(headerRowCount, headerRowCount + headSize);
+            if (features !== undefined) {
+                return {rowCount, features, head: tableHead};
             }
             if (headerRowCount === 0) {
-                const features = [];
+                const generatedFeatures = [];
                 for (let i = 0; i < res[0].length; i++) {
-                    features.push(`Feature ${i}`);
+                    generatedFeatures.push(`Feature ${i}`);
                 }
-                return {rowCount, features};
+                return {rowCount, features: generatedFeatures, head: tableHead};
             }
-            return {rowCount, features: res[0]};
+
+            return {rowCount, features: res[0], head: tableHead};
         } catch (ex) {
-            const inconsistentRecordLength = ex.code == 'CSV_INCONSISTENT_RECORD_LENGTH';
-            if (ex.name != 'DATA_FILE_EMPTY_COLUMN' && !inconsistentRecordLength) {
+            const inconsistentRecordLength = ex.code === 'CSV_INCONSISTENT_RECORD_LENGTH';
+            if (ex.name !== 'DATA_FILE_EMPTY_COLUMN' && !inconsistentRecordLength) {
                 throw AppError.fromName('UNKNOWN_ERROR', [ex]);
             }
             if (inconsistentRecordLength) {
