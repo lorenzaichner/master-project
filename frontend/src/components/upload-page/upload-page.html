@@ -32,34 +32,91 @@
 
             </div>
 
-            <!-- Header data -->
-            <div class="col">
+            <div class="col" if.bind="uploadTypeId < 2">
+              <!-- Header data -->
+              <div class="col">
 
-              <label repeat.for="headerOption of headerOptions">
-                <input id="headerOption${headerOption.id}" type="radio" name="group1"
-                       model.bind="headerOption.id" checked.bind="selectedHeaderOptionId">
-                ${headerOption.description}
-              </label>
+                <label repeat.for="headerOption of headerOptions">
+                  <input id="headerOption${headerOption.id}" type="radio" name="group1"
+                         model.bind="headerOption.id" checked.bind="selectedHeaderOptionId">
+                  ${headerOption.description}
+                </label>
 
-              <br>
+                <br>
+              </div>
+
+              <div class="col">
+                <input class="form-control" type="text" id="csvSeparator" aria-describedby="csvDelimiterDescription"
+                       value.two-way="delimiter">
+                <small id="csvDelimiterDescription" class="form-text text-muted">CSV Delimiter</small>
+                <br>
+              </div>
+            </div>
+            <!-- Specify features (file contains no header) -->
+            <div class="row p-2 m-1" if.bind="selectedHeaderOptionId == 0">
+              <div class="col">
+                <b>Specify the features by name, separated by commas - in the same order as they are in the data
+                  file:</b>
+                <input class="form-control" type="text" id="featuresManually" value.two-way="featuresCSVString">
+              </div>
             </div>
 
-            <div class="col">
-              <input class="form-control" type="text" id="csvSeparator" aria-describedby="csvDelimiterDescription"
-                     value.two-way="delimiter">
-              <small id="csvDelimiterDescription" class="form-text text-muted">CSV Delimiter</small>
-              <br>
-            </div>
-          </div>
-          <!-- Specify features (file contains no header) -->
-          <div class="row p-2 m-1" if.bind="selectedHeaderOptionId == 0">
-            <div class="col">
-              <b>Specify the features by name, separated by commas - in the same order as they are in the data file:</b>
-              <input class="form-control" type="text" id="featuresManually" value.two-way="featuresCSVString">
+
+            <div class="col" if.bind="uploadTypeId >= 2">
+              <small id="linearBetaDescription" class="form-text text-muted">Beta*</small>
+              <input class="form-control" type="number" id="beta" aria-describedby="betaDescription"
+                     value.two-way="beta">
+
+              <small id="samplesNumberDescription" class="form-text text-muted">Number of samples*</small>
+              <input class="form-control" type="number" id="samplesNumber" aria-describedby="samplesNumberDescription"
+                     value.two-way="samplesNumber">
+
+              <small id="commonCausesNumberDescription" class="form-text text-muted">Number of common causes*</small>
+              <input class="form-control" type="number" id="commonCausesNumber" aria-describedby="commonCausesNumberDescription"
+                     value.two-way="commonCausesNumber">
+
+              <small id="discreteCommonCausesNumberDescription" class="form-text text-muted">Number of discrete common causes - default:0</small>
+              <input class="form-control" type="number" id="discreteCommonCausesNumber" aria-describedby="discreteCommonCausesNumberDescription"
+                     value.two-way="discreteCommonCausesNumber">
+
+              <small id="discreteEffectModifiersNumberDescription" class="form-text text-muted">Number of discrete effect modifiers - default:0</small>
+              <input class="form-control" type="number" id="discreteEffectModifiersNumber" aria-describedby="discreteEffectModifiersNumberDescription"
+                     value.two-way="discreteEffectModifiersNumber">
+
+              <small id="discreteInstrumentsNumberDescription" class="form-text text-muted">Number of discrete instruments - default:0</small>
+              <input class="form-control" type="number" id="discreteInstrumentsNumber" aria-describedby="discreteInstrumentsNumberDescription"
+                     value.two-way="discreteInstrumentsNumber">
+
+              <small id="frontdoorVariablesNumberDescription" class="form-text text-muted">Number of frontdoor variables - default:0</small>
+              <input class="form-control" type="number" id="frontdoorVariablesNumber" aria-describedby="frontdoorVariablesNumberDescription"
+                     value.two-way="frontdoorVariablesNumber">
+
+              <small id="instrumentsNumberDescription" class="form-text text-muted">Number of instruments - default:0</small>
+              <input class="form-control" type="number" id="instrumentsNumber" aria-describedby="instrumentsNumberDescription"
+                     value.two-way="instrumentsNumber">
+
+              <small id="treatmentsNumberDescription" class="form-text text-muted">Number of treatments - default:1</small>
+              <input class="form-control" type="number" id="treatmentsNumber" aria-describedby="treatmentsNumberDescription"
+                     value.two-way="treatmentsNumber">
+
+              <small id="isOneHotEncodedDescription" class="form-text text-muted">Is one hot encoded - default: false</small>
+              <input class="form-control form-check-input" type="checkbox" id="isOneHotEncoded" aria-describedby="isOneHotEncodedDescription"
+                     value.two-way="isOneHotEncoded">
+
+              <small id="isOutcomeBinaryDescription" class="form-text text-muted">Is outcome binary- default: false</small>
+              <input class="form-control form-check-input" type="checkbox" id="isOutcomeBinary" aria-describedby="isOutcomeBinaryDescription"
+                     value.two-way="isOutcomeBinary">
+
+              <small id="isTreatmentBinaryDescription" class="form-text text-muted">Is treatment binary- default: true</small>
+              <input class="form-control form-check-input" type="checkbox" id="isTreatmentBinary" aria-describedby="isTreatmentBinaryDescription"
+                     value.two-way="isTreatmentBinary">
+
             </div>
           </div>
           <hr>
-          <button type="submit" class="btn btn-primary" click.trigger="startOperation()">Upload file</button>
+          <button type="submit" class="btn btn-primary" click.trigger="startOperation()">
+            Load data
+          </button>
         </form>
       </div>
     </div>
@@ -79,7 +136,9 @@
         <td repeat.for="dataElement of row">${dataElement}</td>
       </tr>
     </table>
-    <button type="submit" class="btn btn-primary" click.trigger="loadRest()" if.bind="showLoadMoreButton === true">Load rest of data</button>
+    <button type="submit" class="btn btn-primary" click.trigger="loadRest()" if.bind="showLoadMoreButton === true">Load
+      rest of data
+    </button>
   </div>
 
   <status-line view-model.ref="statusLine"></status-line>

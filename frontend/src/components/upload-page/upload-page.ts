@@ -5,6 +5,7 @@ import {GlobalState} from '../global.state';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
 import {GraphState} from '../graph/graph.state';
 import {StatusLine} from '../status/status.line';
+import {IGenerateLinearDatasetDto} from "common/dto/file.upload";
 
 export interface IUploadPage {
   uploadFiles?: FileList;
@@ -22,6 +23,19 @@ export class UploadPage {
   @observable uploadTypeId = 0;
   @observable urlPath = '';
 
+  @observable beta = 0;
+  @observable samplesNumber = 10000;
+  @observable commonCausesNumber = 5;
+  @observable discreteCommonCausesNumber = 0;
+  @observable discreteEffectModifiersNumber = 0;
+  @observable discreteInstrumentsNumber = 0;
+  @observable frontdoorVariablesNumber = 0;
+  @observable instrumentsNumber = 2;
+  @observable treatmentsNumber = 1;
+  @observable isOneHotEncoded = false;
+  @observable isOutcomeBinary = false;
+  @observable isTreatmentBinary = true;
+
   uploadStatus = '';
   statusLine: StatusLine;
   // when the file contains no header and the user need to specify the features
@@ -33,6 +47,10 @@ export class UploadPage {
     {
       id: 1,
       name: 'Download from a link'
+    },
+    {
+      id: 2,
+      name: 'Generate linear dataset'
     }
   ]
   headerOptions = [
@@ -108,6 +126,8 @@ export class UploadPage {
       await this.uploadFile();
     } else if (this.uploadTypeId === 1) {
       await this.getTheFileFromUrl();
+    } else if (this.uploadTypeId === 2) {
+      await this.generateLinearDataset();
     } else {
       this.setErrorStatus('The selected upload type is not supported.');
     }
@@ -240,4 +260,21 @@ export class UploadPage {
     this.updatePageData(fileData, `Loaded the rest of the data`, false);
   }
 
+  private async generateLinearDataset() {
+    //TODO: This check doesn't work, implement better
+    if (isNaN(this.beta) || isNaN(this.commonCausesNumber)||isNaN(this.samplesNumber)) {
+      this.setErrorStatus('Beta, number of common causes and number of samples must be defined.');
+      return;
+    }
+    const linearDatasetDto: IGenerateLinearDatasetDto = {
+      beta: this.beta,
+      samplesNumber: this.samplesNumber,
+      commonCausesNumber: this.commonCausesNumber,
+    }
+    let fileData = await this.uploadService.generateLinearDataset(linearDatasetDto);
+    GlobalState.dataFileUploaded = true;
+    GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
+    this.fileData = undefined;
+    this.updatePageData(fileData, `Generated linear dataset`, true);
+  }
 }
