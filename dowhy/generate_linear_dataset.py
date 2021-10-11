@@ -8,25 +8,7 @@ import logging
 argc = len(sys.argv)
 if argc != 5:
     errMessage = """
-    Invalid arguments, following are needed
-    - path to the data file
-    - data file separator
-    - path to the graph file
-    - JSON string, should contain the following keys:
-        treatment; should be self-explanatory, this is the name of the treatment variable
-        outcome; name of the outcome variable
-        commonCauses (optional); a list containing names of all variables which represent common causes
-        instrumentalVariables (optional); a list containing names of all variables which represent instrumental variables
-        ivMethodInstrument (optional); name of the instrument variable to use, if the IV method is enabled
-        regDiscontVarName (optional); similar as for IV, but it is meant for the regression discontinuity method
-    - a comma separated string containing the selected estimation methods, following estimation methods are currently supported:
-        - regression
-        - stratification
-        - matching
-        - weighting
-        - instrumental variables
-        - regression discontiunity
-        - two stage regression
+    Wrong number of params
     """
     raise Exception(errMessage)
 

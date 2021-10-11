@@ -2,19 +2,24 @@ import {Injectable} from '@nestjs/common';
 import {promises as fs} from 'fs';
 import * as config from 'config';
 import * as csv_parse from 'csv-parse/lib/sync';
-import {FileUploadQueryDto, GraphUploadDto, UrlFileUploadDto} from './upload.dto';
+import {FileUploadQueryDto, GenerateLinearDatasetDto, GraphUploadDto, UrlFileUploadDto} from './upload.dto';
 import {AppError} from 'src/errors/app.error';
 import {GraphUtil} from 'common/util/GraphUtil';
 import axios, {AxiosRequestConfig} from 'axios';
+import {Logger} from '../log/logger';
+import {spawn} from 'child_process';
+import {RedisService} from 'src/redis/redis.service';
 
 const FILE_DIR = config.get<string>('Upload.StorageDir');
 // both at the same dir, at least for now
 const DATA_FILES_DIR = FILE_DIR;
 const GRAPH_FILES_DIR = FILE_DIR;
 
+const ERROR_SAVE = 'ERROR_SAVE';
+
 @Injectable()
 export class UploadService {
-    constructor() {
+    constructor(private readonly redisService: RedisService) {
         //
     }
 
@@ -79,7 +84,7 @@ export class UploadService {
                                           features?: string[]): Promise<{ rowCount: number, features: string[], head: string[][] }> {
         try {
             let buf = fileBuffer;
-            if (features !== null) {
+            if (features !== undefined) {
                 buf = Buffer.concat([Buffer.from(`${features.join(delimiter)}\n`), fileBuffer]);
                 await this.saveFile(session, buf);
             }
@@ -157,34 +162,43 @@ export class UploadService {
         }
     }
 
-    /*public async generateLinearDataset(generateLinearDatasetDto: GenerateLinearDatasetDto,
-                                       session: string): Promise<{ rowCount: number, features: string[] }> {
+    public async generateLinearDataset(generateLinearDatasetDto: GenerateLinearDatasetDto,
+                                       session: string): Promise<void> {
         const path = this.getDataFilePath(session);
         const cwd = process.cwd();
         const proc = spawn('python3',
             [`${cwd}/../dowhy/generate_linear_dataset.py`, path, generateLinearDatasetDto.beta.toString(),
                 generateLinearDatasetDto.commonCausesNumber.toString(),
                 generateLinearDatasetDto.samplesNumber.toString()]);
-        proc.stderr.on('data', d => {
-            const dstring = d.toString();
-            Logger.getInstance().log('error', `estimation script: ${dstring}`);
-        });
-        proc.on('exit', async code => {
+        proc.on('exit', code => {
             if (code === 0) {
-                Logger.getInstance().log('info', 'File generated');
-                const fileBuffer = await fs.readFile(path);
-                return this.parseFileAndGetFeatures(session, fileBuffer, ',', 1, null);
+                Logger.getInstance().log('info', `Successful generating`);
+                this.redisService.set(`file-linear:${session}`, path, 120).catch(ex => {
+                    Logger.getInstance().log('error', `storing the results in redis failed with ${ex}`);
+                });
             } else {
-                Logger.getInstance().log('error', `Failed file generating`);
+                Logger.getInstance().log('error', `Generating linear dataset failed`);
+                this.redisService.set(`file-linear:${session}`, ERROR_SAVE, 120).catch(ex => {
+                    Logger.getInstance().log('error', `storing the results in redis failed with ${ex}`);
+                });
             }
         });
-        return null;
-    } */
+    }
 
     public async loadFullFile(session: string, queryDto: FileUploadQueryDto): Promise<{ rowCount: number, features: string[], head: string[][] }> {
         const path = this.getDataFilePath(session);
         const fileBuffer = await fs.readFile(path);
         return this.parseFileAndGetFeatures(session, fileBuffer, queryDto.delimiter,
             parseInt(queryDto.headerRowCount, 10), true, queryDto.features);
+    }
+
+    public async loadGeneratedDataset(session: string, type: string): Promise<{ rowCount: number, features: string[], head: string[][] } | false> {
+        const path = await this.redisService.get(`file-${type}:${session}`) as string;
+        if (path == null || path === ERROR_SAVE) {
+            return false;
+        }
+        const fileBuffer = await fs.readFile(path);
+        return this.parseFileAndGetFeatures(session, fileBuffer, ',',
+            1, true, undefined);
     }
 }

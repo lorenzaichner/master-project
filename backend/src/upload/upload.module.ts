@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { UploadService } from './upload.service';
 import { UploadController } from './upload.controller';
 import { ResultsModule } from 'src/results/results.module';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
-  imports: [ResultsModule],
+  imports: [ResultsModule, RedisModule],
   exports: [UploadService],
   providers: [UploadService],
   controllers: [UploadController]

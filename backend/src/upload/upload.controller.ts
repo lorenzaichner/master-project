@@ -1,8 +1,14 @@
-import {Body, Controller, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
+import {Body, Controller, Get, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {UploadService} from './upload.service';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
-import {ExternalGraphFileUploadDto, FileUploadQueryDto, GraphUploadDto, UrlFileUploadDto} from './upload.dto';
+import {
+    ExternalGraphFileUploadDto,
+    FileUploadQueryDto,
+    GenerateLinearDatasetDto,
+    GraphUploadDto,
+    UrlFileUploadDto
+} from './upload.dto';
 import {SuccessResponse} from 'common/response/basic.response';
 import {ResultsService} from 'src/results/results.service';
 import {Session} from 'src/decorators/session.decorator';
@@ -101,13 +107,31 @@ export class UploadController {
         };
     }
 
-    /* @Post('/generate/linear')
-     public async handleGenerateDataset(@Body() generateLinearDatasetDto: GenerateLinearDatasetDto,
-                                        @Session() session: string): Promise<FileUploadedResponse> {
-         Logger.getInstance().log('info', generateLinearDatasetDto);
-         return {
-             data: await this.uploadService.generateLinearDataset(generateLinearDatasetDto, session),
-             success: true
-         };
-     }*/
+    @Post('/generate/linear')
+    public async handleGenerateDataset(@Body() generateLinearDatasetDto: GenerateLinearDatasetDto,
+                                       @Session() session: string): Promise<SuccessResponse> {
+        Logger.getInstance().log('info', generateLinearDatasetDto);
+        await this.uploadService.generateLinearDataset(generateLinearDatasetDto, session);
+        return {
+            success: true
+        };
+    }
+
+    @Get('/load/linear')
+    public async loadLinearDataset(@Session() session: string): Promise<FileUploadedResponse> {
+        Logger.getInstance().log('info', `Received request for full file for session: ${session} `);
+        const result = await this.uploadService.loadGeneratedDataset(session, 'linear');
+        Logger.getInstance().log('debug', result);
+        if (result !== false) {
+            return {
+                data: result,
+                success: true
+            };
+        }
+        return {
+            data: null,
+            success: false
+        };
+    }
+
 }
