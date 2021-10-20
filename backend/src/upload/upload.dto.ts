@@ -68,37 +68,37 @@ export class UrlFileUploadDto implements IUrlFileUploadDto {
 // tslint:disable-next-line:max-classes-per-file
 export class GenerateLinearDatasetDto implements IGenerateLinearDatasetDto {
     @IsNumberString()
-    beta: number;
+    beta: string;
 
     @IsNumberString()
-    samplesNumber: number;
+    samplesNumber: string;
 
     @IsNumberString()
-    commonCausesNumber: number;
-
-    @IsNumberString()
-    @IsOptional()
-    discreteCommonCausesNumber: number;
+    commonCausesNumber: string;
 
     @IsNumberString()
     @IsOptional()
-    discreteEffectModifiersNumber: number;
+    discreteCommonCausesNumber: string;
 
     @IsNumberString()
     @IsOptional()
-    discreteInstrumentsNumber: number;
+    discreteEffectModifiersNumber: string;
 
     @IsNumberString()
     @IsOptional()
-    frontdoorVariablesNumber: number;
+    discreteInstrumentsNumber: string;
 
     @IsNumberString()
     @IsOptional()
-    instrumentsNumber: number;
+    frontdoorVariablesNumber: string;
 
     @IsNumberString()
     @IsOptional()
-    treatmentsNumber: number;
+    instrumentsNumber: string;
+
+    @IsNumberString()
+    @IsOptional()
+    treatmentsNumber: string;
 
     @IsBoolean()
     @IsOptional()

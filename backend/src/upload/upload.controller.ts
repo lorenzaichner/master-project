@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
+import {Body, Controller, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {UploadService} from './upload.service';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
@@ -109,29 +109,15 @@ export class UploadController {
 
     @Post('/generate/linear')
     public async handleGenerateDataset(@Body() generateLinearDatasetDto: GenerateLinearDatasetDto,
-                                       @Session() session: string): Promise<SuccessResponse> {
+                                       @Session() session: string): Promise<FileUploadedResponse> {
         Logger.getInstance().log('info', generateLinearDatasetDto);
-        await this.uploadService.generateLinearDataset(generateLinearDatasetDto, session);
-        return {
-            success: true
-        };
-    }
-
-    @Get('/load/linear')
-    public async loadLinearDataset(@Session() session: string): Promise<FileUploadedResponse> {
-        Logger.getInstance().log('info', `Received request for full file for session: ${session} `);
-        const result = await this.uploadService.loadGeneratedDataset(session, 'linear');
-        Logger.getInstance().log('debug', result);
+        const result = await this.uploadService.generateLinearDataset(generateLinearDatasetDto, session);
         if (result !== false) {
             return {
-                data: result,
+                data: result as { rowCount: number, features: string[], head: string[][] },
                 success: true
             };
         }
-        return {
-            data: null,
-            success: false
-        };
     }
 
 }

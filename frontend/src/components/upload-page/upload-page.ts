@@ -23,15 +23,15 @@ export class UploadPage {
   @observable uploadTypeId = 0;
   @observable urlPath = '';
 
-  @observable beta = 0;
-  @observable samplesNumber = 10000;
-  @observable commonCausesNumber = 5;
-  @observable discreteCommonCausesNumber = 0;
-  @observable discreteEffectModifiersNumber = 0;
-  @observable discreteInstrumentsNumber = 0;
-  @observable frontdoorVariablesNumber = 0;
-  @observable instrumentsNumber = 2;
-  @observable treatmentsNumber = 1;
+  @observable beta = '0';
+  @observable samplesNumber = '10000';
+  @observable commonCausesNumber = '5';
+  @observable discreteCommonCausesNumber = '0';
+  @observable discreteEffectModifiersNumber = '0';
+  @observable discreteInstrumentsNumber = '0';
+  @observable frontdoorVariablesNumber = '0';
+  @observable instrumentsNumber = '2';
+  @observable treatmentsNumber = '1';
   @observable isOneHotEncoded = false;
   @observable isOutcomeBinary = false;
   @observable isTreatmentBinary = true;
@@ -260,9 +260,14 @@ export class UploadPage {
     this.updatePageData(fileData, `Loaded the rest of the data`, false);
   }
 
+  private static checkIfInputIsNumber(inputString: string): boolean {
+    return Number.isInteger(Number(inputString)) && inputString !== '';
+  }
+
   private async generateLinearDataset() {
-    //TODO: This check doesn't work, implement better
-    if (isNaN(this.beta) || isNaN(this.commonCausesNumber)||isNaN(this.samplesNumber)) {
+    if (!UploadPage.checkIfInputIsNumber(this.beta) ||
+      !UploadPage.checkIfInputIsNumber(this.commonCausesNumber)
+      || !UploadPage.checkIfInputIsNumber(this.samplesNumber)) {
       this.setErrorStatus('Beta, number of common causes and number of samples must be defined.');
       return;
     }

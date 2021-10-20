@@ -41,16 +41,16 @@ export interface IUrlFileUploadDto {
 }
 
 export interface IGenerateLinearDatasetDto {
-    beta: number;
-    commonCausesNumber: number;
-    samplesNumber: number;
-    instrumentsNumber?: number;
-    treatmentsNumber?: number;
-    frontdoorVariablesNumber?: number;
+    beta: string;
+    commonCausesNumber: string;
+    samplesNumber: string;
+    instrumentsNumber?: string;
+    treatmentsNumber?: string;
+    frontdoorVariablesNumber?: string;
     isTreatmentBinary?: boolean;
     isOutcomeBinary?: boolean;
-    discreteCommonCausesNumber?: number;
-    discreteInstrumentsNumber?: number;
-    discreteEffectModifiersNumber?: number;
+    discreteCommonCausesNumber?: string;
+    discreteInstrumentsNumber?: string;
+    discreteEffectModifiersNumber?: string;
     isOneHotEncoded?:boolean;
 }

@@ -8,18 +8,15 @@ import {GraphUtil} from 'common/util/GraphUtil';
 import axios, {AxiosRequestConfig} from 'axios';
 import {Logger} from '../log/logger';
 import {spawn} from 'child_process';
-import {RedisService} from 'src/redis/redis.service';
 
 const FILE_DIR = config.get<string>('Upload.StorageDir');
 // both at the same dir, at least for now
 const DATA_FILES_DIR = FILE_DIR;
 const GRAPH_FILES_DIR = FILE_DIR;
 
-const ERROR_SAVE = 'ERROR_SAVE';
-
 @Injectable()
 export class UploadService {
-    constructor(private readonly redisService: RedisService) {
+    constructor() {
         //
     }
 
@@ -163,26 +160,26 @@ export class UploadService {
     }
 
     public async generateLinearDataset(generateLinearDatasetDto: GenerateLinearDatasetDto,
-                                       session: string): Promise<void> {
+                                       session: string): Promise<{ rowCount: number, features: string[], head: string[][] } | false> {
         const path = this.getDataFilePath(session);
         const cwd = process.cwd();
         const proc = spawn('python3',
             [`${cwd}/../dowhy/generate_linear_dataset.py`, path, generateLinearDatasetDto.beta.toString(),
                 generateLinearDatasetDto.commonCausesNumber.toString(),
                 generateLinearDatasetDto.samplesNumber.toString()]);
-        proc.on('exit', code => {
-            if (code === 0) {
-                Logger.getInstance().log('info', `Successful generating`);
-                this.redisService.set(`file-linear:${session}`, path, 120).catch(ex => {
-                    Logger.getInstance().log('error', `storing the results in redis failed with ${ex}`);
-                });
-            } else {
-                Logger.getInstance().log('error', `Generating linear dataset failed`);
-                this.redisService.set(`file-linear:${session}`, ERROR_SAVE, 120).catch(ex => {
-                    Logger.getInstance().log('error', `storing the results in redis failed with ${ex}`);
-                });
-            }
+
+        const exitCode = await new Promise((resolve) => {
+            proc.on('exit', resolve);
         });
+        if (exitCode === 0) {
+            Logger.getInstance().log('info', `Successful generating`);
+            const fileBuffer = await fs.readFile(path);
+            return this.parseFileAndGetFeatures(session, fileBuffer, ',',
+                1, false, undefined);
+        } else {
+            Logger.getInstance().log('error', `Generating linear dataset failed`);
+            return false;
+        }
     }
 
     public async loadFullFile(session: string, queryDto: FileUploadQueryDto): Promise<{ rowCount: number, features: string[], head: string[][] }> {
@@ -192,13 +189,4 @@ export class UploadService {
             parseInt(queryDto.headerRowCount, 10), true, queryDto.features);
     }
 
-    public async loadGeneratedDataset(session: string, type: string): Promise<{ rowCount: number, features: string[], head: string[][] } | false> {
-        const path = await this.redisService.get(`file-${type}:${session}`) as string;
-        if (path == null || path === ERROR_SAVE) {
-            return false;
-        }
-        const fileBuffer = await fs.readFile(path);
-        return this.parseFileAndGetFeatures(session, fileBuffer, ',',
-            1, true, undefined);
-    }
 }

@@ -8,7 +8,6 @@ import {
 } from 'common/dto/file.upload';
 import {StringifiableRecord} from 'query-string';
 import {SessionService} from '../session/session.service';
-import {SuccessResponse} from "common/response/basic.response";
 
 export class UploadService {
 
@@ -82,20 +81,13 @@ export class UploadService {
 
   public async generateLinearDataset(linearDatasetDto: IGenerateLinearDatasetDto) {
     const headers = {'Content-Type': 'application/json', session: await SessionService.ensureSession()};
-    const result = await ApiService.post<SuccessResponse>(
+    const result = await ApiService.post<FileUploadedResponse>(
       '/upload/generate/linear',
       JSON.stringify(linearDatasetDto),
       undefined,
       headers,
     );
-    if (result.success){
-      const fileResult = await ApiService.post<FileUploadedResponse>(
-        '/upload/load/linear',
-        undefined,
-        undefined,
-        headers,
-      );
-      return fileResult.data;
-    }
+
+    return result.data;
   }
 }
