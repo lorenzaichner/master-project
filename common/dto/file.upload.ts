@@ -52,5 +52,13 @@ export interface IGenerateLinearDatasetDto {
     discreteCommonCausesNumber?: string;
     discreteInstrumentsNumber?: string;
     discreteEffectModifiersNumber?: string;
-    isOneHotEncoded?:boolean;
+    isOneHotEncoded?: boolean;
+}
+
+export interface IGenerateXYDatasetDto {
+    samplesNumber: string;
+    commonCausesNumber: string;
+    effect: string;
+    isLinear: string;
+    standardDeviationError: string;
 }

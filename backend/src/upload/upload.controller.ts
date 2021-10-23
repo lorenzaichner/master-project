@@ -1,11 +1,11 @@
-import {Body, Controller, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
+import {Body, Controller, HttpException, HttpStatus, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {UploadService} from './upload.service';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
 import {
     ExternalGraphFileUploadDto,
     FileUploadQueryDto,
-    GenerateLinearDatasetDto,
+    GenerateLinearDatasetDto, GenerateXYDatasetDto,
     GraphUploadDto,
     UrlFileUploadDto
 } from './upload.dto';
@@ -108,8 +108,8 @@ export class UploadController {
     }
 
     @Post('/generate/linear')
-    public async handleGenerateDataset(@Body() generateLinearDatasetDto: GenerateLinearDatasetDto,
-                                       @Session() session: string): Promise<FileUploadedResponse> {
+    public async handleGenerateLinearDataset(@Body() generateLinearDatasetDto: GenerateLinearDatasetDto,
+                                             @Session() session: string): Promise<FileUploadedResponse> {
         Logger.getInstance().log('info', generateLinearDatasetDto);
         const result = await this.uploadService.generateLinearDataset(generateLinearDatasetDto, session);
         if (result !== false) {
@@ -117,6 +117,21 @@ export class UploadController {
                 data: result as { rowCount: number, features: string[], head: string[][] },
                 success: true
             };
+        }
+    }
+
+    @Post('/generate/xy')
+    public async handleGenerateXYDataset(@Body() generateXYDatasetDto: GenerateXYDatasetDto,
+                                         @Session() session: string): Promise<FileUploadedResponse> {
+        Logger.getInstance().log('info', generateXYDatasetDto);
+        const result = await this.uploadService.generateXYDataset(generateXYDatasetDto, session);
+        if (result !== false) {
+            return {
+                data: result as { rowCount: number, features: string[], head: string[][] },
+                success: true
+            };
+        } else {
+            throw new HttpException('Failed generating of XY dataset', HttpStatus.BAD_REQUEST);
         }
     }
 

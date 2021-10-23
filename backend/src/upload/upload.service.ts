@@ -2,12 +2,18 @@ import {Injectable} from '@nestjs/common';
 import {promises as fs} from 'fs';
 import * as config from 'config';
 import * as csv_parse from 'csv-parse/lib/sync';
-import {FileUploadQueryDto, GenerateLinearDatasetDto, GraphUploadDto, UrlFileUploadDto} from './upload.dto';
+import {
+    FileUploadQueryDto,
+    GenerateLinearDatasetDto,
+    GenerateXYDatasetDto,
+    GraphUploadDto,
+    UrlFileUploadDto
+} from './upload.dto';
 import {AppError} from 'src/errors/app.error';
 import {GraphUtil} from 'common/util/GraphUtil';
 import axios, {AxiosRequestConfig} from 'axios';
 import {Logger} from '../log/logger';
-import {spawn} from 'child_process';
+import {ChildProcessWithoutNullStreams, spawn} from 'child_process';
 
 const FILE_DIR = config.get<string>('Upload.StorageDir');
 // both at the same dir, at least for now
@@ -167,7 +173,11 @@ export class UploadService {
             [`${cwd}/../dowhy/generate_linear_dataset.py`, path, generateLinearDatasetDto.beta.toString(),
                 generateLinearDatasetDto.commonCausesNumber.toString(),
                 generateLinearDatasetDto.samplesNumber.toString()]);
+        return await this.finishGenerating(proc, path, session);
+    }
 
+    private async finishGenerating(proc: ChildProcessWithoutNullStreams, path: string, session: string):
+        Promise<{ rowCount: number, features: string[], head: string[][] } | false> {
         const exitCode = await new Promise((resolve) => {
             proc.on('exit', resolve);
         });
@@ -177,7 +187,7 @@ export class UploadService {
             return this.parseFileAndGetFeatures(session, fileBuffer, ',',
                 1, false, undefined);
         } else {
-            Logger.getInstance().log('error', `Generating linear dataset failed`);
+            Logger.getInstance().log('error', `Generating of dataset failed`);
             return false;
         }
     }
@@ -189,4 +199,15 @@ export class UploadService {
             parseInt(queryDto.headerRowCount, 10), true, queryDto.features);
     }
 
+    public async generateXYDataset(generateXYDatasetDto: GenerateXYDatasetDto, session: string):
+        Promise<{ rowCount: number, features: string[], head: string[][] } | false> {
+        const path = this.getDataFilePath(session);
+        const cwd = process.cwd();
+        const proc = spawn('python3',
+            [`${cwd}/../dowhy/generate_xy_dataset.py`, path, generateXYDatasetDto.samplesNumber,
+                generateXYDatasetDto.commonCausesNumber,
+                generateXYDatasetDto.effect, generateXYDatasetDto.isLinear, generateXYDatasetDto.standardDeviationError
+            ]);
+        return await this.finishGenerating(proc, path, session);
+    }
 }

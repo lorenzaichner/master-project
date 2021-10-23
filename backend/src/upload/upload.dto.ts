@@ -1,6 +1,6 @@
 import {
     IExternalGraphFileUploadDto,
-    IFileUploadQueryDto, IGenerateLinearDatasetDto,
+    IFileUploadQueryDto, IGenerateLinearDatasetDto, IGenerateXYDatasetDto,
     IGraphUploadDto,
     IUrlFileUploadDto
 } from 'common/dto/file.upload';
@@ -111,4 +111,13 @@ export class GenerateLinearDatasetDto implements IGenerateLinearDatasetDto {
     @IsBoolean()
     @IsOptional()
     isTreatmentBinary: boolean;
+}
+
+// tslint:disable-next-line:max-classes-per-file
+export class GenerateXYDatasetDto implements IGenerateXYDatasetDto {
+    commonCausesNumber: string;
+    effect: string;
+    isLinear: string;
+    samplesNumber: string;
+    standardDeviationError: string;
 }
