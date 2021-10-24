@@ -45,14 +45,15 @@ export interface IGenerateLinearDatasetDto {
     commonCausesNumber: string;
     samplesNumber: string;
     instrumentsNumber?: string;
+    effectModifiersNumber?: string;
     treatmentsNumber?: string;
     frontdoorVariablesNumber?: string;
-    isTreatmentBinary?: boolean;
-    isOutcomeBinary?: boolean;
+    isTreatmentBinary?: string;
+    isOutcomeBinary?: string;
     discreteCommonCausesNumber?: string;
     discreteInstrumentsNumber?: string;
     discreteEffectModifiersNumber?: string;
-    isOneHotEncoded?: boolean;
+    isOneHotEncoded?: string;
 }
 
 export interface IGenerateXYDatasetDto {

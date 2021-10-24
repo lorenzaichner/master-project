@@ -32,6 +32,7 @@ export class UploadPage {
   @observable frontdoorVariablesNumber = '0';
   @observable instrumentsNumber = '2';
   @observable treatmentsNumber = '1';
+  @observable effectModifiersNumber = '0';
   @observable isOneHotEncoded = false;
   @observable isOutcomeBinary = false;
   @observable isTreatmentBinary = true;
@@ -276,21 +277,65 @@ export class UploadPage {
     return Number.isInteger(Number(inputString)) && inputString !== '';
   }
 
-  private static checkIfInputIsNan(inputString: string): boolean {
+  private static checkIfInputIsNumber(inputString: string): boolean {
     return !Number.isNaN(Number(inputString)) && inputString !== '';
   }
 
   private async generateLinearDataset() {
-    if (!UploadPage.checkIfInputIsInteger(this.beta) ||
-      !UploadPage.checkIfInputIsInteger(this.commonCausesNumber)
-      || !UploadPage.checkIfInputIsInteger(this.samplesNumber)) {
-      this.setErrorStatus('Beta, number of common causes and number of samples must be defined.');
+    if (!UploadPage.checkIfInputIsInteger(this.beta)) {
+      this.setErrorStatus('Beta must be an integer.');
       return;
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.commonCausesNumber)) {
+      this.setErrorStatus('Number of common causes must be an integer.');
+      return;
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.samplesNumber)) {
+      this.setErrorStatus('Number of samples must be an integer.');
+      return;
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.instrumentsNumber)) {
+      this.setStatus('Number of instruments must be an integer. Using default value - 0');
+      this.instrumentsNumber = '0';
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.effectModifiersNumber)) {
+      this.setStatus('Number of effect modifiers must be an integer. Using default value - 0');
+      this.effectModifiersNumber = '0';
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.treatmentsNumber)) {
+      this.setStatus('Number of treatments must be an integer. Using default value - 1');
+      this.treatmentsNumber = '1';
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.frontdoorVariablesNumber)) {
+      this.setStatus('Number of treatments must be an integer. Using default value - 0');
+      this.frontdoorVariablesNumber = '0';
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.discreteCommonCausesNumber)) {
+      this.setStatus('Number of discrete common causes must be an integer. Using default value - 0');
+      this.discreteCommonCausesNumber = '0';
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.discreteInstrumentsNumber)) {
+      this.setStatus('Number of discrete instruments must be an integer. Using default value - 0');
+      this.discreteInstrumentsNumber = '0';
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.discreteEffectModifiersNumber)) {
+      this.setStatus('Number of discrete modifiers must be an integer. Using default value - 0');
+      this.discreteInstrumentsNumber = '0';
     }
     const linearDatasetDto: IGenerateLinearDatasetDto = {
       beta: this.beta,
       samplesNumber: this.samplesNumber,
       commonCausesNumber: this.commonCausesNumber,
+      instrumentsNumber:this.instrumentsNumber,
+      effectModifiersNumber: this.effectModifiersNumber,
+      treatmentsNumber:this.treatmentsNumber,
+      frontdoorVariablesNumber: this.frontdoorVariablesNumber,
+      isTreatmentBinary: this.isTreatmentBinary.toString(),
+      isOutcomeBinary: this.isOutcomeBinary.toString(),
+      discreteCommonCausesNumber: this.discreteCommonCausesNumber,
+      discreteInstrumentsNumber: this.discreteInstrumentsNumber,
+      discreteEffectModifiersNumber: this.discreteEffectModifiersNumber,
+      isOneHotEncoded: this.isOneHotEncoded.toString()
     }
     let fileData = await this.uploadService.generateLinearDataset(linearDatasetDto);
     GlobalState.dataFileUploaded = true;
@@ -308,7 +353,7 @@ export class UploadPage {
       this.setStatus('Common causes number must be an integer. Using default value: 1');
       this.commonCausesNumberXY = '1';
     }
-    if (!UploadPage.checkIfInputIsNan(this.standardDeviationErrorXY)) {
+    if (!UploadPage.checkIfInputIsNumber(this.standardDeviationErrorXY)) {
       this.setStatus('Standard deviation must be a number. Using default value. Using default value: 1');
       this.standardDeviationErrorXY = '1';
     }

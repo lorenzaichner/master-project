@@ -1,10 +1,12 @@
 import {
     IExternalGraphFileUploadDto,
-    IFileUploadQueryDto, IGenerateLinearDatasetDto, IGenerateXYDatasetDto,
+    IFileUploadQueryDto,
+    IGenerateLinearDatasetDto,
+    IGenerateXYDatasetDto,
     IGraphUploadDto,
     IUrlFileUploadDto
 } from 'common/dto/file.upload';
-import {IsBoolean, IsNumberString, IsOptional, IsString} from 'class-validator';
+import {IsBooleanString, IsNumberString, IsOptional, IsString} from 'class-validator';
 
 export class FileUploadQueryDto implements IFileUploadQueryDto {
     @IsString()
@@ -100,23 +102,29 @@ export class GenerateLinearDatasetDto implements IGenerateLinearDatasetDto {
     @IsOptional()
     treatmentsNumber: string;
 
-    @IsBoolean()
+    @IsNumberString()
     @IsOptional()
-    isOneHotEncoded: boolean;
+    effectModifiersNumber: string;
 
-    @IsBoolean()
+    @IsBooleanString()
     @IsOptional()
-    isOutcomeBinary: boolean;
+    isOneHotEncoded: string;
 
-    @IsBoolean()
+    @IsBooleanString()
     @IsOptional()
-    isTreatmentBinary: boolean;
+    isOutcomeBinary: string;
+
+    @IsBooleanString()
+    @IsOptional()
+    isTreatmentBinary: string;
 }
 
 // tslint:disable-next-line:max-classes-per-file
 export class GenerateXYDatasetDto implements IGenerateXYDatasetDto {
     commonCausesNumber: string;
+    @IsBooleanString()
     effect: string;
+    @IsBooleanString()
     isLinear: string;
     samplesNumber: string;
     standardDeviationError: string;
