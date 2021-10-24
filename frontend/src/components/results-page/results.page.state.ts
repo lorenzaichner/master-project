@@ -12,6 +12,7 @@ export class ResultsPageState {
   public static regDiscont: number | null = null;
   public static nde: number | null = null;
   public static nie: number | null = null;
+  public static doubleMl: number | null = null;
 
   public static clearResults(): void {
     this.regression = null;
@@ -22,5 +23,6 @@ export class ResultsPageState {
     this.regDiscont = null;
     this.nde = null;
     this.nie = null;
+    this.doubleMl = null;
   }
 }

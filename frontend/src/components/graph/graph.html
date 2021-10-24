@@ -34,8 +34,8 @@
 
         <div if.bind="selectedGraphOption === 1" class="d-block bg-dark text-white p-1 mb-1">Edges</div>
         <div if.bind="selectedGraphOption === 1" class="d-block border p-1 bg-light">
-          <button class="btn btn-primary btn-sm m-1"" click.delegate="removeSelectedEdges()">Remove selected</button>
-          <button class="btn btn-primary btn-sm m-1"" click.delegate="linkCommonConfoundersToTreatmentAndOutcome()">Connect confounders to treatment and outcome</button>
+          <button class="btn btn-primary btn-sm m-1" click.delegate="removeSelectedEdges()">Remove selected</button>
+          <button class="btn btn-primary btn-sm m-1" click.delegate="linkCommonConfoundersToTreatmentAndOutcome()">Connect confounders to treatment and outcome</button>
           <hr>
 
           <div class="row">
@@ -52,7 +52,7 @@
               </select>
             </div>
             <div class="col">
-              <button id="addEdgeBtn" class="btn btn-primary btn-sm m-0"" click.delegate="addEdge()">Add</button><br>
+              <button id="addEdgeBtn" class="btn btn-primary btn-sm m-0" click.delegate="addEdge()">Add</button><br>
             </div>
           </div>
         </div>
@@ -170,6 +170,10 @@
 
             <div class="border-bottom border-primary mb-2">
               <input id="selectMethodTwoStageReg" type="checkbox" checked.two-way="selectedMethods.twoStageRegression"><span class="ml-4">Two stage regression (NDE & NIE)</span>
+            </div>
+
+            <div class="border-bottom border-primary mb-2">
+              <input id="selectDoubleML" type="checkbox" checked.two-way="selectedMethods.doubleMl"><span class="ml-4">Double ML</span>
             </div>
           </div>
         </div>
