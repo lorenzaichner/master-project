@@ -112,23 +112,28 @@
                      aria-describedby="treatmentsNumberDescription"
                      value.two-way="treatmentsNumber">
 
-              <small id="isOneHotEncodedDescription" class="form-text text-muted">Is one hot encoded - default:
-                false</small>
-              <input class="form-control form-check-input" type="checkbox" id="isOneHotEncoded"
-                     aria-describedby="isOneHotEncodedDescription"
-                     value.two-way="isOneHotEncoded">
-
-              <small id="isOutcomeBinaryDescription" class="form-text text-muted">Is outcome binary - default:
-                false</small>
-              <input class="form-control form-check-input" type="checkbox" id="isOutcomeBinary"
-                     aria-describedby="isOutcomeBinaryDescription"
-                     value.two-way="isOutcomeBinary">
-
-              <small id="isTreatmentBinaryDescription" class="form-text text-muted">Is treatment binary - default:
-                true</small>
-              <input class="form-control form-check-input" type="checkbox" id="isTreatmentBinary"
-                     aria-describedby="isTreatmentBinaryDescription"
-                     value.two-way="isTreatmentBinary">
+              <div class="row m-1">
+                <input class="form-control form-check-input mt-0 ml-0" type="checkbox" id="isOneHotEncoded"
+                       aria-describedby="isOneHotEncodedDescription"
+                       checked.two-way="isOneHotEncoded">
+                <label id="isOneHotEncodedDescription" class="form-text text-muted" for="isOneHotEncoded">Is one hot
+                  encoded - default:
+                  false</label></div>
+              <div class="row m-1">
+                <input class="form-control form-check-input mt-0 ml-0" type="checkbox" id="isOutcomeBinary"
+                       aria-describedby="isOutcomeBinaryDescription"
+                       checked.two-way="isOutcomeBinary">
+                <label id="isOutcomeBinaryDescription" class="form-text text-muted" for="isOutcomeBinary">Is outcome
+                  binary - default:
+                  false</label></div>
+              <div class="row m-1">
+                <input class="form-control form-check-input mt-0 ml-0" type="checkbox" id="isTreatmentBinary"
+                       aria-describedby="isTreatmentBinaryDescription"
+                       checked.two-way="isTreatmentBinary">
+                <label id="isTreatmentBinaryDescription" class="form-text text-muted" for="isTreatmentBinary">Is
+                  treatment
+                  binary - default:
+                  true</label></div>
 
             </div>
 
@@ -143,13 +148,13 @@
                      aria-describedby="commonCausesNumberDescription"
                      value.two-way="commonCausesNumberXY">
 
-              <div class="row m-1"><input class="form-control form-check-input" type="checkbox" id="isLinear"
+              <div class="row m-1"><input class="form-control form-check-input mt-0 ml-0" type="checkbox" id="isLinear"
                                           aria-describedby="isLinearDescription"
                                           checked.two-way="isLinearXY">
                 <label id="isLinearDescription" class="form-text text-muted" for="isLinear">Is linear dataset - default:
                   true</label></div>
 
-              <div class="row m-1"><input class="form-control form-check-input" type="checkbox" id="effect"
+              <div class="row m-1"><input class="form-control form-check-input mt-0 ml-0" type="checkbox" id="effect"
                                           aria-describedby="effectDescription"
                                           checked.two-way="effectXY">
                 <label id="effectDescription" class="form-text text-muted" for="effect">Is there effect - default:

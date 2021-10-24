@@ -80,6 +80,7 @@ export class UploadService {
   }
 
   public async generateLinearDataset(linearDatasetDto: IGenerateLinearDatasetDto) {
+    console.log(JSON.stringify(linearDatasetDto))
     const headers = {'Content-Type': 'application/json', session: await SessionService.ensureSession()};
     const result = await ApiService.post<FileUploadedResponse>(
       '/upload/generate/linear',
@@ -100,7 +101,6 @@ export class UploadService {
       undefined,
       headers,
     );
-    console.log(result);
     return result.data;
   }
 }

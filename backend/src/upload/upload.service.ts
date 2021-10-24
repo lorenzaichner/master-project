@@ -170,9 +170,14 @@ export class UploadService {
         const path = this.getDataFilePath(session);
         const cwd = process.cwd();
         const proc = spawn('python3',
-            [`${cwd}/../dowhy/generate_linear_dataset.py`, path, generateLinearDatasetDto.beta.toString(),
-                generateLinearDatasetDto.commonCausesNumber.toString(),
-                generateLinearDatasetDto.samplesNumber.toString()]);
+            [`${cwd}/../dowhy/generate_linear_dataset.py`, path, generateLinearDatasetDto.beta,
+                generateLinearDatasetDto.commonCausesNumber,
+                generateLinearDatasetDto.samplesNumber, generateLinearDatasetDto.instrumentsNumber,
+                generateLinearDatasetDto.effectModifiersNumber, generateLinearDatasetDto.treatmentsNumber,
+                generateLinearDatasetDto.frontdoorVariablesNumber, generateLinearDatasetDto.isTreatmentBinary,
+                generateLinearDatasetDto.isOutcomeBinary, generateLinearDatasetDto.discreteCommonCausesNumber,
+                generateLinearDatasetDto.discreteInstrumentsNumber,
+                generateLinearDatasetDto.discreteEffectModifiersNumber, generateLinearDatasetDto.isOneHotEncoded]);
         return await this.finishGenerating(proc, path, session);
     }
 

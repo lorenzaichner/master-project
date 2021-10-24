@@ -117,6 +117,8 @@ export class UploadController {
                 data: result as { rowCount: number, features: string[], head: string[][] },
                 success: true
             };
+        } else {
+            throw new HttpException('Failed generating of linear dataset', HttpStatus.BAD_REQUEST);
         }
     }
 
