@@ -5,7 +5,7 @@ import {GlobalState} from '../global.state';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
 import {GraphState} from '../graph/graph.state';
 import {StatusLine} from '../status/status.line';
-import {IGenerateLinearDatasetDto} from "common/dto/file.upload";
+import {IGenerateLinearDatasetDto, IGenerateXYDatasetDto} from "common/dto/file.upload";
 
 export interface IUploadPage {
   uploadFiles?: FileList;
@@ -36,6 +36,12 @@ export class UploadPage {
   @observable isOutcomeBinary = false;
   @observable isTreatmentBinary = true;
 
+  @observable commonCausesNumberXY = '1';
+  @observable isLinearXY = true;
+  @observable samplesNumberXY = '10000';
+  @observable effectXY = true;
+  @observable standardDeviationErrorXY = '1';
+
   uploadStatus = '';
   statusLine: StatusLine;
   // when the file contains no header and the user need to specify the features
@@ -51,6 +57,10 @@ export class UploadPage {
     {
       id: 2,
       name: 'Generate linear dataset'
+    },
+    {
+      id: 3,
+      name: 'Generate XY dataset'
     }
   ]
   headerOptions = [
@@ -128,6 +138,8 @@ export class UploadPage {
       await this.getTheFileFromUrl();
     } else if (this.uploadTypeId === 2) {
       await this.generateLinearDataset();
+    } else if (this.uploadTypeId === 3) {
+      await this.generateXYDataset();
     } else {
       this.setErrorStatus('The selected upload type is not supported.');
     }
@@ -260,14 +272,18 @@ export class UploadPage {
     this.updatePageData(fileData, `Loaded the rest of the data`, false);
   }
 
-  private static checkIfInputIsNumber(inputString: string): boolean {
+  private static checkIfInputIsInteger(inputString: string): boolean {
     return Number.isInteger(Number(inputString)) && inputString !== '';
   }
 
+  private static checkIfInputIsNan(inputString: string): boolean {
+    return !Number.isNaN(Number(inputString)) && inputString !== '';
+  }
+
   private async generateLinearDataset() {
-    if (!UploadPage.checkIfInputIsNumber(this.beta) ||
-      !UploadPage.checkIfInputIsNumber(this.commonCausesNumber)
-      || !UploadPage.checkIfInputIsNumber(this.samplesNumber)) {
+    if (!UploadPage.checkIfInputIsInteger(this.beta) ||
+      !UploadPage.checkIfInputIsInteger(this.commonCausesNumber)
+      || !UploadPage.checkIfInputIsInteger(this.samplesNumber)) {
       this.setErrorStatus('Beta, number of common causes and number of samples must be defined.');
       return;
     }
@@ -281,5 +297,32 @@ export class UploadPage {
     GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
     this.fileData = undefined;
     this.updatePageData(fileData, `Generated linear dataset`, true);
+  }
+
+  private async generateXYDataset() {
+    if (!UploadPage.checkIfInputIsInteger(this.samplesNumberXY)) {
+      this.setErrorStatus('Samples number must be an integer.');
+      return;
+    }
+    if (!UploadPage.checkIfInputIsInteger(this.commonCausesNumberXY)) {
+      this.setStatus('Common causes number must be an integer. Using default value: 1');
+      this.commonCausesNumberXY = '1';
+    }
+    if (!UploadPage.checkIfInputIsNan(this.standardDeviationErrorXY)) {
+      this.setStatus('Standard deviation must be a number. Using default value. Using default value: 1');
+      this.standardDeviationErrorXY = '1';
+    }
+    const xyDatasetDto: IGenerateXYDatasetDto = {
+      samplesNumber: this.samplesNumberXY,
+      commonCausesNumber: this.commonCausesNumberXY,
+      effect: this.effectXY.toString(),
+      isLinear: this.isLinearXY.toString(),
+      standardDeviationError: this.standardDeviationErrorXY
+    }
+    let fileData = await this.uploadService.generateXYDataset(xyDatasetDto);
+    GlobalState.dataFileUploaded = true;
+    GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
+    this.fileData = undefined;
+    this.updatePageData(fileData, `Generated XY dataset`, true);
   }
 }

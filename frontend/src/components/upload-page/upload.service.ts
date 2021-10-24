@@ -2,7 +2,7 @@ import {ApiService} from '../api.service';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
 import {
   IFileUploadQueryDto,
-  IGenerateLinearDatasetDto,
+  IGenerateLinearDatasetDto, IGenerateXYDatasetDto,
   IGraphUploadDto,
   IUrlFileUploadDto
 } from 'common/dto/file.upload';
@@ -88,6 +88,19 @@ export class UploadService {
       headers,
     );
 
+    return result.data;
+  }
+
+  public async generateXYDataset(xyDatasetDto: IGenerateXYDatasetDto) {
+    console.log(JSON.stringify(xyDatasetDto))
+    const headers = {'Content-Type': 'application/json', session: await SessionService.ensureSession()};
+    const result = await ApiService.post<FileUploadedResponse>(
+      '/upload/generate/xy',
+      JSON.stringify(xyDatasetDto),
+      undefined,
+      headers,
+    );
+    console.log(result);
     return result.data;
   }
 }

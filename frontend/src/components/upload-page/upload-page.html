@@ -62,7 +62,7 @@
             </div>
 
 
-            <div class="col" if.bind="uploadTypeId >= 2">
+            <div class="col" if.bind="uploadTypeId === 2">
               <small id="linearBetaDescription" class="form-text text-muted">Beta*</small>
               <input class="form-control" type="text" id="beta" aria-describedby="betaDescription"
                      value.two-way="beta">
@@ -72,45 +72,95 @@
                      value.two-way="samplesNumber">
 
               <small id="commonCausesNumberDescription" class="form-text text-muted">Number of common causes*</small>
-              <input class="form-control" type="text" id="commonCausesNumber" aria-describedby="commonCausesNumberDescription"
+              <input class="form-control" type="text" id="commonCausesNumber"
+                     aria-describedby="commonCausesNumberDescription"
                      value.two-way="commonCausesNumber">
 
-              <small id="discreteCommonCausesNumberDescription" class="form-text text-muted">Number of discrete common causes - default:0</small>
-              <input class="form-control" type="text" id="discreteCommonCausesNumber" aria-describedby="discreteCommonCausesNumberDescription"
+              <small id="discreteCommonCausesNumberDescription" class="form-text text-muted">Number of discrete common
+                causes - default:0</small>
+              <input class="form-control" type="text" id="discreteCommonCausesNumber"
+                     aria-describedby="discreteCommonCausesNumberDescription"
                      value.two-way="discreteCommonCausesNumber">
 
-              <small id="discreteEffectModifiersNumberDescription" class="form-text text-muted">Number of discrete effect modifiers - default:0</small>
-              <input class="form-control" type="text" id="discreteEffectModifiersNumber" aria-describedby="discreteEffectModifiersNumberDescription"
+              <small id="discreteEffectModifiersNumberDescription" class="form-text text-muted">Number of discrete
+                effect modifiers - default:0</small>
+              <input class="form-control" type="text" id="discreteEffectModifiersNumber"
+                     aria-describedby="discreteEffectModifiersNumberDescription"
                      value.two-way="discreteEffectModifiersNumber">
 
-              <small id="discreteInstrumentsNumberDescription" class="form-text text-muted">Number of discrete instruments - default:0</small>
-              <input class="form-control" type="text" id="discreteInstrumentsNumber" aria-describedby="discreteInstrumentsNumberDescription"
+              <small id="discreteInstrumentsNumberDescription" class="form-text text-muted">Number of discrete
+                instruments - default:0</small>
+              <input class="form-control" type="text" id="discreteInstrumentsNumber"
+                     aria-describedby="discreteInstrumentsNumberDescription"
                      value.two-way="discreteInstrumentsNumber">
 
-              <small id="frontdoorVariablesNumberDescription" class="form-text text-muted">Number of frontdoor variables - default:0</small>
-              <input class="form-control" type="text" id="frontdoorVariablesNumber" aria-describedby="frontdoorVariablesNumberDescription"
+              <small id="frontdoorVariablesNumberDescription" class="form-text text-muted">Number of frontdoor variables
+                - default:0</small>
+              <input class="form-control" type="text" id="frontdoorVariablesNumber"
+                     aria-describedby="frontdoorVariablesNumberDescription"
                      value.two-way="frontdoorVariablesNumber">
 
-              <small id="instrumentsNumberDescription" class="form-text text-muted">Number of instruments - default:0</small>
-              <input class="form-control" type="text" id="instrumentsNumber" aria-describedby="instrumentsNumberDescription"
+              <small id="instrumentsNumberDescription" class="form-text text-muted">Number of instruments -
+                default:0</small>
+              <input class="form-control" type="text" id="instrumentsNumber"
+                     aria-describedby="instrumentsNumberDescription"
                      value.two-way="instrumentsNumber">
 
-              <small id="treatmentsNumberDescription" class="form-text text-muted">Number of treatments - default:1</small>
-              <input class="form-control" type="text" id="treatmentsNumber" aria-describedby="treatmentsNumberDescription"
+              <small id="treatmentsNumberDescription" class="form-text text-muted">Number of treatments -
+                default:1</small>
+              <input class="form-control" type="text" id="treatmentsNumber"
+                     aria-describedby="treatmentsNumberDescription"
                      value.two-way="treatmentsNumber">
 
-              <small id="isOneHotEncodedDescription" class="form-text text-muted">Is one hot encoded - default: false</small>
-              <input class="form-control form-check-input" type="checkbox" id="isOneHotEncoded" aria-describedby="isOneHotEncodedDescription"
+              <small id="isOneHotEncodedDescription" class="form-text text-muted">Is one hot encoded - default:
+                false</small>
+              <input class="form-control form-check-input" type="checkbox" id="isOneHotEncoded"
+                     aria-describedby="isOneHotEncodedDescription"
                      value.two-way="isOneHotEncoded">
 
-              <small id="isOutcomeBinaryDescription" class="form-text text-muted">Is outcome binary- default: false</small>
-              <input class="form-control form-check-input" type="checkbox" id="isOutcomeBinary" aria-describedby="isOutcomeBinaryDescription"
+              <small id="isOutcomeBinaryDescription" class="form-text text-muted">Is outcome binary - default:
+                false</small>
+              <input class="form-control form-check-input" type="checkbox" id="isOutcomeBinary"
+                     aria-describedby="isOutcomeBinaryDescription"
                      value.two-way="isOutcomeBinary">
 
-              <small id="isTreatmentBinaryDescription" class="form-text text-muted">Is treatment binary- default: true</small>
-              <input class="form-control form-check-input" type="checkbox" id="isTreatmentBinary" aria-describedby="isTreatmentBinaryDescription"
+              <small id="isTreatmentBinaryDescription" class="form-text text-muted">Is treatment binary - default:
+                true</small>
+              <input class="form-control form-check-input" type="checkbox" id="isTreatmentBinary"
+                     aria-describedby="isTreatmentBinaryDescription"
                      value.two-way="isTreatmentBinary">
 
+            </div>
+
+            <div class="col" if.bind="uploadTypeId === 3">
+              <small id="samplesNumberDescriptionXY" class="form-text text-muted">Number of samples*</small>
+              <input class="form-control" type="text" id="samplesNumberXY" aria-describedby="samplesNumberDescription"
+                     value.two-way="samplesNumberXY">
+
+              <small id="commonCausesNumberXYDescription" class="form-text text-muted">Number of common causes -
+                default: 1</small>
+              <input class="form-control" type="text" id="commonCausesNumberXY"
+                     aria-describedby="commonCausesNumberDescription"
+                     value.two-way="commonCausesNumberXY">
+
+              <div class="row m-1"><input class="form-control form-check-input" type="checkbox" id="isLinear"
+                                          aria-describedby="isLinearDescription"
+                                          checked.two-way="isLinearXY">
+                <label id="isLinearDescription" class="form-text text-muted" for="isLinear">Is linear dataset - default:
+                  true</label></div>
+
+              <div class="row m-1"><input class="form-control form-check-input" type="checkbox" id="effect"
+                                          aria-describedby="effectDescription"
+                                          checked.two-way="effectXY">
+                <label id="effectDescription" class="form-text text-muted" for="effect">Is there effect - default:
+                  true</label></div>
+
+              <small id="standardDeviationErrorDescription" class="form-text text-muted">Value of standard
+                deviation -
+                default: 1</small>
+              <input class="form-control" type="text" id="standardDeviationError"
+                     aria-describedby="standardDeviationErrorDescription"
+                     value.two-way="standardDeviationErrorXY">
             </div>
           </div>
           <hr>
