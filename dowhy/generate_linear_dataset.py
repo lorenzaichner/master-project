@@ -1,9 +1,10 @@
+"""
+Example usage:
+python3 generate_linear_dataset.py test.dat 10 5 10  
+"""
 import dowhy
 import dowhy.datasets
 import sys
-import warnings
-import logging
-
 
 argc = len(sys.argv)
 if argc != 5:
@@ -13,8 +14,6 @@ if argc != 5:
     raise Exception(errMessage)
 
 # extract params
-
-
 file_path = sys.argv[1]
 beta = int(sys.argv[2])
 num_common_causes = int(sys.argv[3])

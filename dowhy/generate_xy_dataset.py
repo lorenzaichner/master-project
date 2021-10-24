@@ -1,3 +1,7 @@
+"""
+Example usage: 
+python3 generate_xy_dataset.py test.csv 10 1 true false 1
+"""
 import dowhy
 import dowhy.datasets
 import sys
@@ -23,5 +27,4 @@ data = dowhy.datasets.xy_dataset(num_samples, effect,
         num_common_causes,
         is_linear,
         sd_error)
-print(data)
 data['df'].to_csv(file_path, index=False)
