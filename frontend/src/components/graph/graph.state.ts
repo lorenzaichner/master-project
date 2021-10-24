@@ -18,6 +18,7 @@ export class GraphState {
     ivs: true,
     regDiscont: true,
     twoStageRegression: true,
+    doubleMl: true
   };
 
   public static data: any | null = null;

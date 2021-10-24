@@ -9,6 +9,7 @@ export type Results = {
   regDiscont: number | null,
   nde: number | null,
   nie: number | null,
+  doubleMl: number | null
 };
 
 export type GetResultsResponse = SuccessResponse & (Results | { available: false });

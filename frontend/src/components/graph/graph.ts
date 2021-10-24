@@ -17,6 +17,7 @@ export type SelectedMethods = {
   ivs: boolean;
   regDiscont: boolean;
   twoStageRegression: boolean;
+  doubleMl: boolean;
 };
 
 @inject(UploadService, GraphState, ResultsPage)
@@ -61,6 +62,7 @@ export class Graph {
     ivs: true,
     regDiscont: true,
     twoStageRegression: true,
+    doubleMl: true
   };
 
   // 0 - upload graph file
@@ -182,6 +184,7 @@ export class Graph {
       ivs: true,
       regDiscont: true,
       twoStageRegression: true,
+      doubleMl: true
     };
   }
 
@@ -194,6 +197,7 @@ export class Graph {
       ivs: false,
       regDiscont: false,
       twoStageRegression: false,
+      doubleMl: false
     };
   }
 
@@ -313,6 +317,10 @@ export class Graph {
     }
     if(this.selectedMethods.twoStageRegression) {
       selectedMethods.push('two stage regression');
+    }
+
+    if(this.selectedMethods.doubleMl) {
+      selectedMethods.push('double ml');
     }
 
     ResultsPageState.clearResults();

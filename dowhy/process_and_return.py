@@ -35,6 +35,9 @@ import logging
 import dowhy
 from math import isnan, isinf
 from dowhy import CausalModel
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LassoCV
+from sklearn.ensemble import GradientBoostingRegressor
 
 # dowhy logging setup
 warnings.filterwarnings('ignore')
@@ -105,6 +108,7 @@ selected_methods_weighting = 'weighting' in selected_methods_list
 selected_methods_ivs = 'instrumental variables' in selected_methods_list
 selected_methods_reg_discont = 'regression discontinuity' in selected_methods_list
 selected_methods_two_stage_regression = 'two stage regression' in selected_methods_list
+selected_methods_double_ml = 'double ml' in selected_methods_list
 
 treatment = None
 outcome = None
@@ -118,6 +122,11 @@ common_causes = model_data.get('commonCauses', [])
 ivs = model_data.get('ivs', [])
 ivMethodInstrument = model_data.get('ivMethodInstrument')
 regDiscontVarName = model_data.get('regDiscontVarName')
+# model_y = model_data.get('model_y')
+# model_t = model_data.get('model_t')
+# model_final = model_data('model_final')
+# featurizer_degree = int(model_data.get('featurizer_degree'))
+# featurizer_bias = model_data.get('featurizer_bias').lower() == 'true' if model_data.get('featurizer_bias') is not None else False
 
 if treatment == None or outcome == None:
     errorExit('"treatment" or "outcome" are not in the JSON file')
@@ -260,6 +269,22 @@ if selected_methods_two_stage_regression == True:
         print('[FAIL] Two stage regression (NIE)')
         log_estimation_method_fail('Two stage regression (NIE)', e)
 
+if selected_methods_double_ml == True:
+    try:
+        casual_estimate_double_ml = model.estimate_effect(identified_estimand, method_name="backdoor.econml.dml.DML",
+                                     control_value = 0,
+                                     treatment_value = 1,
+                                 confidence_intervals=False,
+                                method_params={"init_params":{'model_y':GradientBoostingRegressor(),
+                                                              'model_t': GradientBoostingRegressor(),
+                                                              "model_final":LassoCV(fit_intercept=False),
+                                                              'featurizer':PolynomialFeatures(degree=2, include_bias=True)},
+                                               "fit_params":{}})
+        r_double_ml = casual_estimate_double_ml.value
+    except Exception as e:
+        print('[FAIL] DOUBLE ML')
+        log_estimation_method_fail('DOUBLE ML', e)
+
 def getCleanResult(value):
     if value != None and not isnan(value) and not isinf(value):
         return value
@@ -273,6 +298,7 @@ est_results['iv'] = getCleanResult(r_iv)
 est_results['regDiscont'] = getCleanResult(r_reg_discont)
 est_results['nde'] = getCleanResult(r_nde)
 est_results['nie'] = getCleanResult(r_nie)
+est_results['doubleMl'] = getCleanResult(r_double_ml)
 print('RESULT_' + json.dumps(est_results))
 logfile.close()
 estimation_method_fails_logfile.close()

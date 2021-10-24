@@ -1,11 +1,10 @@
-import { inject } from 'aurelia-framework';
-import { ApiService } from '../api.service';
-import { GetResultsResponse, Results } from 'common/response/results/results.response';
-import { SuccessResponse } from 'common/response/basic.response';
-import { SessionService } from '../session/session.service';
-import { StatusLine } from '../status/status.line';
-import { ResultsPageState } from './results.page.state';
-import { GraphState } from '../graph/graph.state';
+import {ApiService} from '../api.service';
+import {GetResultsResponse, Results} from 'common/response/results/results.response';
+import {SuccessResponse} from 'common/response/basic.response';
+import {SessionService} from '../session/session.service';
+import {StatusLine} from '../status/status.line';
+import {ResultsPageState} from './results.page.state';
+import {GraphState} from '../graph/graph.state';
 
 const GET_RESULTS_MAX_RETRIES = 60;
 const GET_RESULTS_PERIOD_MS = 2000;
@@ -19,10 +18,11 @@ export class ResultsPage {
   private regDiscont: number | null = null;
   private nde: number | null = null;
   private nie: number | null = null;
+  private doubleMl: number | null = null;
   private statusLine: StatusLine;
 
   constructor() {
-    if(ResultsPageState.shouldGetResults) {
+    if (ResultsPageState.shouldGetResults) {
       this.pollResults()
         .catch(err => {
           this.statusLine.setError(`Polling for results failed with ${err}`);
@@ -42,12 +42,13 @@ export class ResultsPage {
     this.regDiscont = null;
     this.nde = null;
     this.nie = null;
+    this.doubleMl = null;
   }
 
   private async pollResults(): Promise<void> {
-    for(let i = 0; i < GET_RESULTS_MAX_RETRIES; i++) {
-      const data = await ApiService.get<GetResultsResponse>('/results', { session: await SessionService.ensureSession() });
-      if((data as (SuccessResponse & { available: false })).available === false) {
+    for (let i = 0; i < GET_RESULTS_MAX_RETRIES; i++) {
+      const data = await ApiService.get<GetResultsResponse>('/results', {session: await SessionService.ensureSession()});
+      if ((data as (SuccessResponse & { available: false })).available === false) {
         this.statusLine.setStatus(`waiting for the results... (${i}/${GET_RESULTS_MAX_RETRIES})`);
         await this.waitMs(GET_RESULTS_PERIOD_MS);
       } else {
@@ -60,13 +61,14 @@ export class ResultsPage {
         this.iv = GraphState.selectedMethods.ivs ? dataWithResults.iv : null;
         this.regDiscont = GraphState.selectedMethods.regDiscont ? dataWithResults.regDiscont : null;
 
-        if(GraphState.selectedMethods.twoStageRegression == true) {
+        if (GraphState.selectedMethods.twoStageRegression == true) {
           this.nde = dataWithResults.nde;
           this.nie = dataWithResults.nie;
         } else {
           this.nde = null;
           this.nie = null;
         }
+        this.doubleMl = GraphState.selectedMethods.doubleMl ? dataWithResults.doubleMl : null;
 
         ResultsPageState.regression = this.regression;
         ResultsPageState.stratification = this.stratification;
@@ -76,6 +78,7 @@ export class ResultsPage {
         ResultsPageState.regDiscont = this.regDiscont;
         ResultsPageState.nde = this.nde;
         ResultsPageState.nie = this.nie;
+        ResultsPageState.doubleMl = this.doubleMl;
 
         this.statusLine.setStatus('results received');
         break;
@@ -96,8 +99,9 @@ export class ResultsPage {
     this.weighting = GraphState.selectedMethods.weighting ? ResultsPageState.weighting : null;
     this.iv = GraphState.selectedMethods.ivs ? ResultsPageState.iv : null;
     this.regDiscont = GraphState.selectedMethods.regDiscont ? ResultsPageState.regDiscont : null;
+    this.doubleMl = GraphState.selectedMethods.doubleMl ? ResultsPageState.doubleMl : null;
 
-    if(GraphState.selectedMethods.twoStageRegression == true) {
+    if (GraphState.selectedMethods.twoStageRegression == true) {
       this.nde = ResultsPageState.nde;
       this.nie = ResultsPageState.nie;
     } else {

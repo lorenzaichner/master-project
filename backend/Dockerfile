@@ -13,7 +13,7 @@ RUN npm run build
 
 # set the python environment up (for the DoWhy lib)
 WORKDIR /usr/src/app/dowhy
-RUN apt-get update && apt-get install -y python3-pip && pip3 install --upgrade pip && pip3 install numpy pandas dowhy
+RUN apt-get update && apt-get install -y python3-pip && pip3 install --upgrade pip && pip3 install numpy pandas sklearn dowhy econml
 COPY ./dowhy/ ./
 
 WORKDIR /usr/src/app/backend
