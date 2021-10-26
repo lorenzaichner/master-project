@@ -1,13 +1,13 @@
 import cytoscape from 'cytoscape';
-import { inject } from 'aurelia-framework';
-import { GraphState } from './graph.state';
-import { StatusLine } from '../status/status.line';
-import { IGraphUploadDto, IExternalGraphFileUploadDto } from 'common/dto/file.upload';
-import { UploadService } from '../upload-page/upload.service';
-import { GlobalState } from '../global.state';
-import { ResultsPage } from '../results-page/results-page';
-import { ResultsPageState } from '../results-page/results.page.state';
-import { GraphUtil } from 'common/util/GraphUtil';
+import {inject} from 'aurelia-framework';
+import {GraphState} from './graph.state';
+import {StatusLine} from '../status/status.line';
+import {IGraphUploadDto, IExternalGraphFileUploadDto} from 'common/dto/file.upload';
+import {UploadService} from '../upload-page/upload.service';
+import {GlobalState} from '../global.state';
+import {ResultsPage} from '../results-page/results-page';
+import {ResultsPageState} from '../results-page/results.page.state';
+import {GraphUtil} from 'common/util/GraphUtil';
 
 export type SelectedMethods = {
   regression: boolean;
@@ -44,8 +44,16 @@ export class Graph {
   addIVCurrent: string | null;
   ivs: string[] = [];
 
+  models = ["Lasso Regression", "Gradient Boosting Regression"];
   ivMethodInstrument: string | null = null;
   regDiscontVarName: string | null = null;
+  modelY: string = this.models[0];
+  modelT: string = this.models[0];
+  modelFinal: string = this.models[0];
+  selectPolynomialFeaturizer: boolean = false;
+  polynomialDegree: string = "1";
+  includeBias = false;
+
 
   /**
    * two last selected nodes, used to add an edge by clicking nodes intead of typing their names
@@ -82,7 +90,7 @@ export class Graph {
   public addNode() {
     this.graph.add({
       group: 'nodes',
-      data: { id: this.ctr++ },
+      data: {id: this.ctr++},
       position: {
         x: 0,
         y: 0
@@ -91,21 +99,21 @@ export class Graph {
   }
 
   public downloadGraph() {
-    if(Object.keys(this.graph).length == 0) {
+    if (Object.keys(this.graph).length == 0) {
       this.statusLine.setError('No graph is present');
       return;
     }
     const edges = [];
     const nodes = [];
     const data = this.graph.json();
-    if(data.elements.nodes !== undefined) {
-      for(const node of data.elements.nodes) {
+    if (data.elements.nodes !== undefined) {
+      for (const node of data.elements.nodes) {
         nodes.push({
           id: node.data.id
         });
       }
-      if(data.elements.edges !== undefined) {
-        for(const edge of data.elements.edges) {
+      if (data.elements.edges !== undefined) {
+        for (const edge of data.elements.edges) {
           edges.push({
             source: edge.data.source,
             target: edge.data.target
@@ -116,7 +124,7 @@ export class Graph {
     const graph = GraphUtil.graphFromNodesAndEdges(nodes, edges);
     const e = document.getElementById('graph-dl');
     let el;
-    if(e == null) {
+    if (e == null) {
       el = document.createElement('a');
       el.id = 'graph-dl';
       el.target = '_blank';
@@ -130,8 +138,8 @@ export class Graph {
 
   // TODO add new node, use existing node?
   public addCommonCause(): void {
-    if(this.addCommonCauseCurrent != null && this.addCommonCauseCurrent.length > 0) {
-      if(this.commonCauses.includes(this.addCommonCauseCurrent)) {
+    if (this.addCommonCauseCurrent != null && this.addCommonCauseCurrent.length > 0) {
+      if (this.commonCauses.includes(this.addCommonCauseCurrent)) {
         this.statusLine.setError(`Common cause '${this.addCommonCauseCurrent}' already added`);
         return;
       }
@@ -147,7 +155,7 @@ export class Graph {
   public setIVs(id: string) {
     this.graph.add({
       group: 'nodes',
-      data: { id },
+      data: {id},
       position: {
         x: 0,
         y: 0
@@ -156,13 +164,13 @@ export class Graph {
   }
 
   public addIV(): void {
-    if(this.addIVCurrent != null && this.addIVCurrent.length > 0) {
+    if (this.addIVCurrent != null && this.addIVCurrent.length > 0) {
       const node = this.graph.nodes(`[id = "${this.addIVCurrent}"]`);
-      if(node.json() === undefined) {
+      if (node.json() === undefined) {
         this.statusLine.setError(`Could not add IV '${this.addIVCurrent}', node is not in the graph`);
         return;
       }
-      if(this.ivs.includes(this.addIVCurrent)) {
+      if (this.ivs.includes(this.addIVCurrent)) {
         this.statusLine.setError(`IV '${this.addIVCurrent}' already added`);
         return;
       }
@@ -206,7 +214,7 @@ export class Graph {
   }
 
   private addEdge() {
-    if(this.addEdgeSelectedNodes != null && this.addEdgeSelectedNodes[0] != null && this.addEdgeSelectedNodes[1] != null) {
+    if (this.addEdgeSelectedNodes != null && this.addEdgeSelectedNodes[0] != null && this.addEdgeSelectedNodes[1] != null) {
       this.graph.add({
         group: 'edges',
         data: {
@@ -220,23 +228,23 @@ export class Graph {
     }
     // no duplicate edges
     const existingEdge1 = this.graph.edges(`[source = "${this.addEdgeNodeIdFrom}"][target = "${this.addEdgeNodeIdTo}"]`)
-    if(existingEdge1.json() !== undefined) {
+    if (existingEdge1.json() !== undefined) {
       this.statusLine.setError('Edge already exists, cannot add a duplicate.');
       return;
     }
     const existingEdge2 = this.graph.edges(`[target = "${this.addEdgeNodeIdFrom}"][source = "${this.addEdgeNodeIdTo}"]`)
-    if(existingEdge2.json() !== undefined) {
+    if (existingEdge2.json() !== undefined) {
       this.statusLine.setError('Edge already exists, cannot add a duplicate.');
       return;
     }
 
     const nodeFrom = this.graph.nodes(`[id = "${this.addEdgeNodeIdFrom}"]`);
-    if(nodeFrom.json() === undefined) {
+    if (nodeFrom.json() === undefined) {
       this.statusNodeNotFound(this.addEdgeNodeIdFrom);
       return;
     }
     const nodeTo = this.graph.nodes(`[id = "${this.addEdgeNodeIdTo}"]`);
-    if(nodeTo.json() === undefined) {
+    if (nodeTo.json() === undefined) {
       this.statusNodeNotFound(this.addEdgeNodeIdTo);
       return;
     }
@@ -253,15 +261,15 @@ export class Graph {
   }
 
   private linkCommonConfoundersToTreatmentAndOutcome() {
-    if(this.treatment == null) {
+    if (this.treatment == null) {
       this.statusLine.setError('Treatment must be specified for this operation.');
       return;
     }
-    if(this.outcome == null) {
+    if (this.outcome == null) {
       this.statusLine.setError('Outcome must be specified for this operation.');
       return;
     }
-    for(const cc of this.commonCauses) {
+    for (const cc of this.commonCauses) {
       // confounder -> treatment
       this.graph.add({
         group: 'edges',
@@ -287,39 +295,39 @@ export class Graph {
   }
 
   private upload() {
-    if(this.treatment == null) {
+    if (this.treatment == null) {
       this.statusLine.setError('You must specify the name of the treatment variable');
       return;
     }
-    if(this.outcome == null) {
+    if (this.outcome == null) {
       this.statusLine.setError('You must specify the name of the outcome variable');
       return;
     }
 
     const selectedMethods: string[] = [];
-    if(this.selectedMethods.regression) {
+    if (this.selectedMethods.regression) {
       selectedMethods.push('regression');
     }
-    if(this.selectedMethods.stratification) {
+    if (this.selectedMethods.stratification) {
       selectedMethods.push('stratification');
     }
-    if(this.selectedMethods.matching) {
+    if (this.selectedMethods.matching) {
       selectedMethods.push('matching');
     }
-    if(this.selectedMethods.weighting) {
+    if (this.selectedMethods.weighting) {
       selectedMethods.push('weighting');
     }
-    if(this.selectedMethods.ivs) {
+    if (this.selectedMethods.ivs) {
       selectedMethods.push('instrumental variables');
     }
-    if(this.selectedMethods.regDiscont) {
+    if (this.selectedMethods.regDiscont) {
       selectedMethods.push('regression discontinuity');
     }
-    if(this.selectedMethods.twoStageRegression) {
+    if (this.selectedMethods.twoStageRegression) {
       selectedMethods.push('two stage regression');
     }
 
-    if(this.selectedMethods.doubleMl) {
+    if (this.selectedMethods.doubleMl) {
       selectedMethods.push('double ml');
     }
 
@@ -327,7 +335,7 @@ export class Graph {
     this.resultsPage.clearResults();
     ResultsPageState.shouldGetResults = true;
     // get needed data
-    if(this.selectedGraphOption === 1) {
+    if (this.selectedGraphOption === 1) {
       const uploadData: IGraphUploadDto = {
         nodes: [],
         edges: [],
@@ -338,19 +346,25 @@ export class Graph {
           ivs: this.ivs,
           ivMethodInstrument: this.ivMethodInstrument,
           regDiscontVarName: this.regDiscontVarName,
+          modelY: this.modelY,
+          modelT: this.modelT,
+          modelFinal: this.modelFinal,
+          selectPolynomialFeaturizer: this.selectPolynomialFeaturizer.toString(),
+          includeBias: this.includeBias.toString(),
+          polynomialDegree: this.polynomialDegree
         },
         selectedMethods: selectedMethods.join(','),
         delimiter: GlobalState.dataFileDelimiter,
       };
       const data = this.graph.json();
-      if(data.elements.nodes !== undefined) {
-        for(const node of data.elements.nodes) {
+      if (data.elements.nodes !== undefined) {
+        for (const node of data.elements.nodes) {
           uploadData.nodes.push({
             id: node.data.id
           });
         }
-        if(data.elements.edges !== undefined) {
-          for(const edge of data.elements.edges) {
+        if (data.elements.edges !== undefined) {
+          for (const edge of data.elements.edges) {
             uploadData.edges.push({
               id: edge.data.id,
               source: edge.data.source,
@@ -375,6 +389,12 @@ export class Graph {
           ivs: this.ivs,
           ivMethodInstrument: this.ivMethodInstrument,
           regDiscontVarName: this.regDiscontVarName,
+          modelY: this.modelY,
+          modelT: this.modelT,
+          modelFinal: this.modelFinal,
+          selectPolynomialFeaturizer: this.selectPolynomialFeaturizer.toString(),
+          includeBias: this.includeBias.toString(),
+          polynomialDegree: this.polynomialDegree
         },
         selectedMethods: selectedMethods.join(','),
         delimiter: GlobalState.dataFileDelimiter,
@@ -394,7 +414,7 @@ export class Graph {
   }
 
   private statusNodeNotFound(node: string | null): void {
-    if(node != null) {
+    if (node != null) {
       this.statusLine.setError(`Could not find node '${this.addEdgeNodeIdFrom}'`);
     } else {
       this.statusLine.setError('You must input a node name.');
@@ -402,8 +422,8 @@ export class Graph {
   }
 
   attached() {
-    if(GlobalState.dataFileUploaded) {
-      if(GraphState.data == null) {
+    if (GlobalState.dataFileUploaded) {
+      if (GraphState.data == null) {
         this.graph = cytoscape({
           container: this['graph'],
           elements: {
@@ -430,8 +450,7 @@ export class Graph {
             }
           ]
         });
-      }
-      else {
+      } else {
         this.graph = cytoscape({
           ...GraphState.data,
           container: this['graph'],
@@ -439,11 +458,11 @@ export class Graph {
         });
       }
       this.graph.on('select', e => {
-        if(e.target[0].group() === 'nodes') {
+        if (e.target[0].group() === 'nodes') {
           const id = e.target[0].data().id;
-          if(this.addEdgeSelectedNodes == null) {
+          if (this.addEdgeSelectedNodes == null) {
             this.addEdgeSelectedNodes = [id, null];
-          } else if(this.addEdgeSelectedNodes[1] == null) {
+          } else if (this.addEdgeSelectedNodes[1] == null) {
             this.addEdgeSelectedNodes[1] = id;
           } else {
             this.addEdgeSelectedNodes[0] = this.addEdgeSelectedNodes[1];
@@ -454,22 +473,22 @@ export class Graph {
     }
     Object.assign(this.selectedMethods, GraphState.selectedMethods);
     // model data
-    if(GraphState.modelData.treatment != null) {
+    if (GraphState.modelData.treatment != null) {
       this.treatment = GraphState.modelData.treatment;
     }
-    if(GraphState.modelData.outcome != null) {
+    if (GraphState.modelData.outcome != null) {
       this.outcome = GraphState.modelData.outcome;
     }
-    if(GraphState.modelData.commonCauses != null) {
+    if (GraphState.modelData.commonCauses != null) {
       this.commonCauses = GraphState.modelData.commonCauses.slice(0);
     }
-    if(GraphState.modelData.ivs != null) {
+    if (GraphState.modelData.ivs != null) {
       this.ivs = GraphState.modelData.ivs.slice(0);
     }
   }
 
   detached() {
-    if(Object.keys(this.graph).length > 0) {
+    if (Object.keys(this.graph).length > 0) {
       GraphState.data = this.graph.json();
     }
     Object.assign(GraphState.selectedMethods, this.selectedMethods);

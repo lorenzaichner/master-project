@@ -174,6 +174,41 @@
 
             <div class="border-bottom border-primary mb-2">
               <input id="selectDoubleML" type="checkbox" checked.two-way="selectedMethods.doubleMl"><span class="ml-4">Double ML</span>
+              <div class="col mb-3" if.bind="selectedMethods.doubleMl === true">
+                Choose model for outcome and confounders:
+                <select id="modelY" value.bind="modelY">
+                  <option repeat.for="model of models" model.bind="model">${model}</option>
+                </select>
+              </div>
+              <div class="col mb-3" if.bind="selectedMethods.doubleMl === true">
+                Choose model for treatment and confounders:
+                <select id="modelT" value.bind="modelT">
+                  <option repeat.for="model of models" model.bind="model">${model}</option>
+                </select>
+              </div>
+              <div class="col mb-3" if.bind="selectedMethods.doubleMl === true">
+                Choose final model(outcome and treatment):
+                <select id="modelFinal" value.bind="modelFinal">
+                  <option repeat.for="model of models" model.bind="model">${model}</option>
+                </select>
+              </div>
+              <div class="col mb-3" if.bind="selectedMethods.doubleMl === true">
+                <input id="selectPolynomialFeaturizer" type="checkbox" checked.two-way="selectPolynomialFeaturizer"><span class="ml-4">Use Polynomial Featurizer</span>
+                <div class="col mb-3" if.bind="selectPolynomialFeaturizer === true">
+                  Input data for Polynomial Featurizer:
+                  <small id="polynomialDegreeDescription" class="form-text text-muted">Degree of polynomial:</small>
+                  <input class="form-control" type="text" id="polynomialDegree"
+                         aria-describedby="polynomialDegreeDescription"
+                         value.two-way="polynomialDegree">
+                  <div class="row m-1">
+                    <input class="form-control form-check-input mt-0 ml-0" type="checkbox" id="includeBias"
+                           aria-describedby="includeBiasDescription"
+                           checked.two-way="includeBias">
+                    <label id="includeBiasDescription" class="form-text text-muted" for="includeBias">Include bias:</label></div>
+                </div>
+              </div>
+
+
             </div>
           </div>
         </div>

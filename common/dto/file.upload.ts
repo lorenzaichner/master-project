@@ -16,6 +16,12 @@ export interface IGraphUploadDto {
         ivs: string[],
         ivMethodInstrument?: string,
         regDiscontVarName?: string,
+        modelY?: string,
+        modelT?: string,
+        modelFinal?: string,
+        selectPolynomialFeaturizer?: string,
+        polynomialDegree?: string,
+        includeBias?: string
     };
     selectedMethods: string;
 }
@@ -29,6 +35,12 @@ export interface IExternalGraphFileUploadDto {
         ivs: string[],
         ivMethodInstrument?: string,
         regDiscontVarName?: string,
+        modelY?: string,
+        modelT?: string,
+        modelFinal?: string,
+        selectPolynomialFeaturizer?: string,
+        polynomialDegree?: string,
+        includeBias?: string
     };
     selectedMethods: string;
 }

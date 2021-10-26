@@ -69,6 +69,7 @@ export class UploadController {
         @Body() graphDto: GraphUploadDto,
         @Session() session: string,
     ): Promise<SuccessResponse> {
+        Logger.getInstance().log('info', graphDto);
         await this.uploadService.transformAndSaveGraph(session, graphDto);
         await this.resultsService.startAndProcessResults(
             session,

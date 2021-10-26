@@ -122,11 +122,19 @@ common_causes = model_data.get('commonCauses', [])
 ivs = model_data.get('ivs', [])
 ivMethodInstrument = model_data.get('ivMethodInstrument')
 regDiscontVarName = model_data.get('regDiscontVarName')
-# model_y = model_data.get('model_y')
-# model_t = model_data.get('model_t')
-# model_final = model_data('model_final')
-# featurizer_degree = int(model_data.get('featurizer_degree'))
-# featurizer_bias = model_data.get('featurizer_bias').lower() == 'true' if model_data.get('featurizer_bias') is not None else False
+model_y = model_data.get('modelY')
+model_t = model_data.get('modelT')
+model_final = model_data.get('modelFinal')
+use_polynomial_features = model_data.get('selectPolynomialFeaturizer')
+polynomial_degree = int(model_data.get('polynomialDegree'))
+include_bias = model_data.get('includeBias').lower() == 'true' if model_data.get('featurizer_bias') is not None else False
+
+
+def getModel(model_str):
+    if model_str == 'Lasso Regression':
+        return LassoCV()
+    else:
+        return GradientBoostingRegressor()
 
 if treatment == None or outcome == None:
     errorExit('"treatment" or "outcome" are not in the JSON file')
@@ -153,6 +161,7 @@ r_reg_discont = None
 # two stage regression will be used for NDE & NIE
 r_nde = None
 r_nie = None
+r_double_ml = None
 
 # contains estimation results
 est_results = {}
@@ -271,15 +280,19 @@ if selected_methods_two_stage_regression == True:
 
 if selected_methods_double_ml == True:
     try:
+        feature_transformer = None
+        if use_polynomial_features == True:
+            feature_transformer = PolynomialFeatures(degree=polynomial_degree, include_bias=include_bias)
+        method_params_obj = {"init_params":{'model_y':getModel(model_y),
+                                                                      'model_t': getModel(model_t),
+                                                                      "model_final":getModel(model_final),
+                                                                      'featurizer':feature_transformer},
+                                                       "fit_params":{}}
         casual_estimate_double_ml = model.estimate_effect(identified_estimand, method_name="backdoor.econml.dml.DML",
                                      control_value = 0,
                                      treatment_value = 1,
                                  confidence_intervals=False,
-                                method_params={"init_params":{'model_y':GradientBoostingRegressor(),
-                                                              'model_t': GradientBoostingRegressor(),
-                                                              "model_final":LassoCV(fit_intercept=False),
-                                                              'featurizer':PolynomialFeatures(degree=2, include_bias=True)},
-                                               "fit_params":{}})
+                                method_params=method_params_obj)
         r_double_ml = casual_estimate_double_ml.value
     except Exception as e:
         print('[FAIL] DOUBLE ML')
