@@ -53,6 +53,7 @@ export class ResultsService {
      */
     public async getResults(session: string): Promise<Results | false> {
         const results = await this.redisService.get(`results:${session}`);
+        console.log(results)
         if (results == null) {
             return false;
         }

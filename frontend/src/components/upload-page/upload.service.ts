@@ -18,9 +18,9 @@ export class UploadService {
    *   2 - DOUBLE_HEADER
    * features specified only if the file contains no header, user specifies the features manually
    */
-  public async uploadFile(data: FormData, delimiter: string, headerRowCount: number, features?: string[]): Promise<FileUploadedResponse['data'] | { errorMessage: string }> {
+  public async uploadFile(data: FormData, delimiter: string, headerRowCount: number, store: string, features?: string[]): Promise<FileUploadedResponse['data'] | { errorMessage: string }> {
     const headers = {session: await SessionService.ensureSession()};
-    const query: IFileUploadQueryDto = {delimiter, headerRowCount: headerRowCount.toString(), features};
+    const query: IFileUploadQueryDto = {delimiter, headerRowCount: headerRowCount.toString(), store, features};
     const result = await ApiService.post<FileUploadedResponse>(
       '/upload/data',
       data,

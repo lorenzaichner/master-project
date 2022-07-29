@@ -6,9 +6,10 @@ import {
     IGraphUploadDto,
     IUrlFileUploadDto
 } from 'common/dto/file.upload';
-import {IsBooleanString, IsNumberString, IsOptional, IsString} from 'class-validator';
+import {IsBoolean, IsBooleanString, IsNumberString, IsOptional, IsString} from 'class-validator';
 
 export class FileUploadQueryDto implements IFileUploadQueryDto {
+    
     @IsString()
     delimiter!: string;
 
@@ -18,6 +19,10 @@ export class FileUploadQueryDto implements IFileUploadQueryDto {
     @IsOptional()
     @IsString({each: true})
     features?: string[];
+    
+    @IsOptional()
+    @IsString()
+    store: string;    
 }
 
 // TODO validation
@@ -58,6 +63,9 @@ export class UrlFileUploadDto implements IUrlFileUploadDto {
 
     @IsString()
     delimiter!: string;
+
+    @IsBoolean()
+    store!: string;
 
     @IsNumberString()
     headerRowCount!: string;

@@ -13,6 +13,7 @@ export interface IUploadPage {
   selectedHeaderOptionId: string;
   delimiter: string;
   fileData: FileUploadedResponse['data'];
+  storeData: string;
 }
 
 @inject(UploadService, UploadPageState, GlobalState)
@@ -20,6 +21,7 @@ export class UploadPage {
   uploadFiles: FileList;
   status = 'idle';
   @observable delimiter = ',';
+  @observable store = "false";
   @observable uploadTypeId = 0;
   @observable urlPath = '';
 
@@ -132,6 +134,15 @@ export class UploadPage {
     }
   }
 
+  private async storeChanged(): Promise<void>{
+    if(this.uploadPageState.get('storeData'))
+    {
+      this.uploadPageState.set('storeData', "true")
+    } else {
+      this.uploadPageState.set('storeData', "false")
+    }    
+  }
+
   private async startOperation(): Promise<void> {
     if (this.uploadTypeId === 0) {
       await this.uploadFile();
@@ -171,7 +182,7 @@ export class UploadPage {
     this.updatePageData(fileData, `Uploaded from: '${this.urlPath}'`, true);
   }
 
-  private async uploadFile(): Promise<void> {
+  private async uploadFile(): Promise<void> {  //check promise, because we get in return the number to regain data
     if (this.uploadFiles == null || this.uploadFiles[0] == null) {
       this.setErrorStatus('no file selected. Please select a file to upload.');
       return;
@@ -191,7 +202,7 @@ export class UploadPage {
           return;
         }
       }
-      fileData = await this.uploadService.uploadFile(formData, this.delimiter, this.selectedHeaderOptionId, features);
+      fileData = await this.uploadService.uploadFile(formData, this.delimiter, this.selectedHeaderOptionId, this.store, features); 
       GlobalState.dataFileUploaded = true;
       GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
     } catch (ex) {
@@ -271,6 +282,10 @@ export class UploadPage {
     GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
     this.fileData = undefined;
     this.updatePageData(fileData, `Loaded the rest of the data`, false);
+  }
+
+  private async storeData(){
+    
   }
 
   private static checkIfInputIsInteger(inputString: string): boolean {

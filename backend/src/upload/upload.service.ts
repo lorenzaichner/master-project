@@ -14,18 +14,25 @@ import {GraphUtil} from 'common/util/GraphUtil';
 import axios, {AxiosRequestConfig} from 'axios';
 import {Logger} from '../log/logger';
 import {ChildProcessWithoutNullStreams, spawn} from 'child_process';
+import { MinioClientService } from 'src/minio-client/minio-client.service';
+import { BufferedFile } from 'src/minio-client/file.model';
 
-const FILE_DIR = config.get<string>('Upload.StorageDir');
+const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/backend"; //config.get<string>('Upload.StorageDir');
+//const FILE_DIR = config.get<string>('Upload.StorageDir');
 // both at the same dir, at least for now
 const DATA_FILES_DIR = FILE_DIR;
 const GRAPH_FILES_DIR = FILE_DIR;
 
 @Injectable()
 export class UploadService {
-    constructor() {
-        //
+    constructor(private minioClientService: MinioClientService) {
+        
     }
-
+    
+    async storeFileInDatabase(file: File){
+        const uploadedFile = await this.minioClientService.upload(file as unknown as BufferedFile);
+    }
+    
     private static removeLineFromFile(targetLine: number, buf: Buffer): Buffer {
         let targetLineStartOffset = 0;
         let targetLineEndOffset = 0;
@@ -48,11 +55,12 @@ export class UploadService {
 
     private async saveFile(session: string, file: Buffer): Promise<void> {
         const dataFilePath = this.getDataFilePath(session);
+        console.log(dataFilePath)
         try {
             await fs.writeFile(dataFilePath, file);
         } catch (err) {
             const errMessage = `could not save the data file which was uploaded by the user (process.cwd is '${process.cwd()}', data file path is '${dataFilePath}')`;
-            throw AppError.fromName('DATA_FILE_SAVE_FAIL', [err], errMessage);
+            throw AppError.fromName('DATA_FILE_SAVE_FAIL', [err], errMessage + dataFilePath);
         }
     }
 
@@ -145,6 +153,8 @@ export class UploadService {
     public async uploadFile(queryDto: FileUploadQueryDto, session: string, file: Express.Multer.File):
         Promise<{ rowCount: number, features: string[], head: string[][] }> {
         await this.saveFile(session, file.buffer);
+        if(queryDto.store == "true")
+            await this.storeFileInDatabase(file as unknown as File);
         return this.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter,
             parseInt(queryDto.headerRowCount, 10), false, queryDto.features);
     }

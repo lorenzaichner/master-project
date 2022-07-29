@@ -2,6 +2,7 @@ export interface IFileUploadQueryDto {
     delimiter: string;
     headerRowCount: string;
     features?: string[];
+    store?: string;
 }
 
 export interface IGraphUploadDto {

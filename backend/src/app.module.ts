@@ -8,9 +8,18 @@ import { SessionModule } from './session/session.module';
 import { SessionGuard } from './guards/session.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { RedisModule } from './redis/redis.module';
+import { MinioClientModule } from './minio-client/minio-client.module';
+import { ConfigModule } from '@nestjs/config';
+
 
 @Module({
-  imports: [UploadModule, ResultsModule, SessionModule, RedisModule],
+  imports: [
+    UploadModule, 
+    ResultsModule, 
+    SessionModule, 
+    RedisModule, 
+    MinioClientModule, 
+    ConfigModule.forRoot({ isGlobal: true })],
   controllers: [AppController],
   providers: [AppService, {
     provide: APP_GUARD,

@@ -1,5 +1,16 @@
 version: "3.7"
 services:
+  database:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./storage/minio:/data
+    environment:
+      MINIO_ROOT_USER: adminminio
+      MINIO_ROOT_PASSWORD: adminminio
+    command: server --address 0.0.0.0:9000 /data
+    
   redis:
     container_name: cdi_redis
     image: "redis:alpine"
@@ -31,4 +42,10 @@ services:
       - "8080:8080"
     volumes:
       - /usr/src/app/node_modules
+
+  
+    #sudo docker run -p 9000:9000 minio/minio server /data
+    
+    
+    
 
