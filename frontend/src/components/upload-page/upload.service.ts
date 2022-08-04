@@ -30,6 +30,15 @@ export class UploadService {
     return result.data;
   }
 
+  public async loadStoredFile(identifier: string){
+    const formData = new FormData();
+    formData.append('identifier', identifier);
+    const result = await ApiService.get<FileUploadedResponse>(
+      '/file/' + identifier
+    );
+    return result.data;
+  }
+
   public async uploadGraph(query: IGraphUploadDto): Promise<void> {
     await ApiService.post<FileUploadedResponse>(
       '/upload/graph',

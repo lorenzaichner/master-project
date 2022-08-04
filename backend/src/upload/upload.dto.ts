@@ -137,3 +137,4 @@ export class GenerateXYDatasetDto implements IGenerateXYDatasetDto {
     samplesNumber: string;
     standardDeviationError: string;
 }
+

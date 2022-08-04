@@ -14,6 +14,7 @@ export interface IUploadPage {
   delimiter: string;
   fileData: FileUploadedResponse['data'];
   storeData: string;
+  identifier: string,
 }
 
 @inject(UploadService, UploadPageState, GlobalState)
@@ -24,6 +25,7 @@ export class UploadPage {
   @observable store = "false";
   @observable uploadTypeId = 0;
   @observable urlPath = '';
+  @observable identifier = '';
 
   @observable beta = '0';
   @observable samplesNumber = '10000';
@@ -53,19 +55,24 @@ export class UploadPage {
     id: 0,
     name: 'File upload'
   },
-    {
-      id: 1,
-      name: 'Download from a link'
-    },
-    {
-      id: 2,
-      name: 'Generate linear dataset'
-    },
-    {
-      id: 3,
-      name: 'Generate XY dataset'
-    }
+  {
+    id: 1,
+    name: 'Download from a link'
+  },
+  {
+    id: 2,
+    name: 'Generate linear dataset'
+  },
+  {
+    id: 3,
+    name: 'Generate XY dataset'
+  },
+  {
+    id: 4,
+    name: 'Load stored dataset'
+  }
   ]
+
   headerOptions = [
     {
       id: 0,
@@ -122,6 +129,10 @@ export class UploadPage {
     }
   }
 
+  private async identifierChanged(): Promise<void>{
+    this.uploadPageState.set('identifier', this.identifier);
+  }
+
   private selectedHeaderOptionIdChanged(newVal: string, oldVal?: string): void {
     if (oldVal !== undefined) {
       this.uploadPageState.set('selectedHeaderOptionId', newVal);
@@ -152,10 +163,43 @@ export class UploadPage {
       await this.generateLinearDataset();
     } else if (this.uploadTypeId === 3) {
       await this.generateXYDataset();
-    } else {
+    } else if (this.uploadTypeId === 4){
+      await this.loadStoredFile();
+    }
+    else {
       this.setErrorStatus('The selected upload type is not supported.');
     }
   }
+
+  private async loadStoredFile(): Promise<void> {  //check promise, because we get in return the number to regain data
+    if (this.identifier == null || this.identifier[0] == null) {
+      this.setErrorStatus('No identifier selected');
+      return;
+    }
+    
+    const identifier = this.identifier;
+
+    let fileData;
+    try {
+      let features = undefined;
+      if (this.selectedHeaderOptionId === 0) {
+        features = this.extractFeatures();
+        if (features === undefined) {
+          this.setErrorStatus('Please input a valid value for the features');
+          return;
+        }
+      }
+      fileData = await this.uploadService.loadStoredFile(this.identifier); 
+      GlobalState.dataFileUploaded = true;
+      GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
+    } catch (ex) {
+      this.setErrorStatus(ex.message);
+      return;
+    }
+    this.fileData = undefined;
+    this.updatePageData(fileData, `Uploaded '${this.uploadFiles[0].name}'`, true);
+  }
+
 
   private async getTheFileFromUrl(): Promise<void> {
     if (this.urlPath === '') {

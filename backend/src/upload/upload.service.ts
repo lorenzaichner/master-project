@@ -29,8 +29,9 @@ export class UploadService {
         
     }
     
-    async storeFileInDatabase(file: File){
-        const uploadedFile = await this.minioClientService.upload(file as unknown as BufferedFile);
+    async storeFileInDatabase(file: File, delemiter: string){
+        const uploadedFile = await this.minioClientService.upload(file as unknown as BufferedFile, delemiter );
+        return uploadedFile;
     }
     
     private static removeLineFromFile(targetLine: number, buf: Buffer): Buffer {
@@ -92,7 +93,7 @@ export class UploadService {
      * @param features might be there if the user specifies them (file contains no header)
      */
     private async parseFileAndGetFeatures(session: string, fileBuffer: Buffer, delimiter: string, headerRowCount: number, getFullFile: boolean,
-                                          features?: string[]): Promise<{ rowCount: number, features: string[], head: string[][] }> {
+                                          features?: string[], identifier?: string): Promise<{ rowCount: number, features: string[], head: string[][], identifier?: string}> {
         try {
             let buf = fileBuffer;
             if (features !== undefined) {
@@ -132,7 +133,7 @@ export class UploadService {
                 }
                 return {rowCount, features: generatedFeatures, head: tableHead};
             }
-            return {rowCount, features: res[0], head: tableHead};
+            return {rowCount, features: res[0], head: tableHead, identifier};
         } catch (ex) {
             const inconsistentRecordLength = ex.code === 'CSV_INCONSISTENT_RECORD_LENGTH';
             if (ex.name !== 'DATA_FILE_EMPTY_COLUMN' && !inconsistentRecordLength) {
@@ -154,9 +155,19 @@ export class UploadService {
         Promise<{ rowCount: number, features: string[], head: string[][] }> {
         await this.saveFile(session, file.buffer);
         if(queryDto.store == "true")
-            await this.storeFileInDatabase(file as unknown as File);
+            var identifier = await this.storeFileInDatabase(file as unknown as File, queryDto.delimiter);
         return this.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter,
-            parseInt(queryDto.headerRowCount, 10), false, queryDto.features);
+            parseInt(queryDto.headerRowCount, 10), false, queryDto.features, identifier);
+    }
+
+    public async loadFile(identifier: string, session: string):
+    Promise<{ rowCount: number, features: string[], head: string[][] }> {
+
+        var object = await this.minioClientService.get(identifier);
+
+        //return this.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter,
+        //parseInt(queryDto.headerRowCount, 10), false, queryDto.features, identifier);
+        return null;
     }
 
     public async getFileFromLink(urlFileUploadDto: UrlFileUploadDto, session: string):

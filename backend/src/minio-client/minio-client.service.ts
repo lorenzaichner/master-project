@@ -18,6 +18,7 @@ export class MinioClientService {
 
   public async upload(
     file: BufferedFile,
+    delemiter: string, 
     bucketName: string = this.bucketName,
   ) {
     if (!(file.mimetype.includes('csv'))) {
@@ -35,19 +36,22 @@ export class MinioClientService {
       file.originalname.lastIndexOf('.'),
       file.originalname.length,
     );
+    const identifier = Math.random().toString(36).slice(2);
     const metaData = {
       'Content-Type': file.mimetype,
+      'Filename': file.fieldname,
+      'Delemiter' : delemiter,
     };
 
     // We need to append the extension at the end otherwise Minio will save it as a generic file
-    const fileName = hashedFileName + extension;
+    const fileName = identifier;
 
     this.client.putObject(
       bucketName,
       fileName,
       file.buffer,
-      //metaData,
-      function (err, res) {
+      metaData,
+      /*function (err, res) {
         if (err) {
           throw new HttpException(
             'Error uploading file',
@@ -55,11 +59,14 @@ export class MinioClientService {
           );
         }
       },
+      */
     );
 
-    return {
-      url: `${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${process.env.MINIO_BUCKET_NAME}/${fileName}`,
-    };
+    return identifier; 
+  }
+
+  async get(identifier: string, bucketName: string = this.bucketName) {
+    const data = this.client.getObject(bucketName, identifier);
   }
 
   async delete(objetName: string, bucketName: string = this.bucketName) {

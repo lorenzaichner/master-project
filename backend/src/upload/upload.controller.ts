@@ -1,4 +1,4 @@
-import {Body, Controller, HttpException, HttpStatus, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
+import {Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {UploadService} from './upload.service';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
@@ -31,6 +31,17 @@ export class UploadController {
         Logger.getInstance().log('info', queryDto);
         return {
             data: await this.uploadService.uploadFile(queryDto, session, file),
+            success: true
+        };
+    }
+
+    @Get('/file/:IDENTIFIER')
+    public async loadData(
+        @Param('IDENTIFIER') identifier: string,
+        @Session() session: string
+        ): Promise<FileUploadedResponse> {
+        return {
+            data: await this.uploadService.loadFile(identifier, session),
             success: true
         };
     }

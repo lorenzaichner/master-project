@@ -167,6 +167,17 @@
                      aria-describedby="standardDeviationErrorDescription"
                      value.two-way="standardDeviationErrorXY">
             </div>
+
+      
+            <div if.bind="uploadTypeId === 4">
+              <div class="col">
+                <input class="form-control" type="text" id="identifier" aria-describedby="fileID"
+                       value.two-way="identifier">
+                <small id="csvDelimiterDescription" class="form-text text-muted">Load stored data by identifier</small>
+                <br>
+              </div>
+            </div>  
+            
           </div>
           <hr>
           <button type="submit" class="btn btn-primary" click.trigger="startOperation()">
@@ -188,7 +199,7 @@
     <hr>
     <p class="bg-primary p-2 text-white">File data</p>
     <div if.bind="fileData !== undefined">Total number of rows is: ${fileData.rowCount}</div>
-
+    <div if.bind="store === true && fileData !== undefined">Identifier for Dataset: ${fileData.identifier}</div>
     <div if.bind="fileData !== undefined">Features:</div>
     <table id="featureTable" class="table">
       <tr>
