@@ -35,9 +35,9 @@ export class UploadController {
         };
     }
 
-    @Get('/file/:IDENTIFIER')
+    @Get('/file/:identifier')
     public async loadData(
-        @Param('IDENTIFIER') identifier: string,
+        @Param('identifier') identifier: string,
         @Session() session: string
         ): Promise<FileUploadedResponse> {
         return {

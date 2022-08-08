@@ -162,11 +162,13 @@ export class UploadService {
 
     public async loadFile(identifier: string, session: string):
     Promise<{ rowCount: number, features: string[], head: string[][] }> {
-
-        var object = await this.minioClientService.get(identifier);
-
+        const object = await this.minioClientService.get(identifier);
+        console.log(object);
+        //const filename = 
         //return this.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter,
         //parseInt(queryDto.headerRowCount, 10), false, queryDto.features, identifier);
+        
+
         return null;
     }
 

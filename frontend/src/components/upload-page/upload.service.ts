@@ -31,10 +31,12 @@ export class UploadService {
   }
 
   public async loadStoredFile(identifier: string){
+    const headers = {session: await SessionService.ensureSession()};
     const formData = new FormData();
     formData.append('identifier', identifier);
     const result = await ApiService.get<FileUploadedResponse>(
-      '/file/' + identifier
+      '/upload/file/' + identifier,
+      headers,
     );
     return result.data;
   }

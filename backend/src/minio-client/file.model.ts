@@ -22,5 +22,12 @@ export interface StoredFileMetadata {
   updatedAt: Date;
   fileSrc?: string;
 }
-  
-  export type AppMimeType = 'text/csv';
+
+export interface LoadedFileMetaData {
+  path: string;
+  delemiter: string;
+  filename: string;
+  filetype: AppMimeType;
+}
+
+export type AppMimeType = 'text/csv';
