@@ -86,6 +86,9 @@ export class GenerateLinearDatasetDto implements IGenerateLinearDatasetDto {
     @IsNumberString()
     commonCausesNumber: string;
 
+    @IsBoolean()
+    store!: string;
+
     @IsNumberString()
     @IsOptional()
     discreteCommonCausesNumber: string;
@@ -125,6 +128,7 @@ export class GenerateLinearDatasetDto implements IGenerateLinearDatasetDto {
     @IsBooleanString()
     @IsOptional()
     isTreatmentBinary: string;
+
 }
 
 // tslint:disable-next-line:max-classes-per-file

@@ -16,6 +16,8 @@ import {Logger} from '../log/logger';
 import {ChildProcessWithoutNullStreams, spawn} from 'child_process';
 import { MinioClientService } from 'src/minio-client/minio-client.service';
 import { BufferedFile } from 'src/minio-client/file.model';
+import {FileInterceptor} from '@nestjs/platform-express';
+import { request } from 'http';
 
 const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/backend"; //config.get<string>('Upload.StorageDir');
 //const FILE_DIR = config.get<string>('Upload.StorageDir');
@@ -29,8 +31,13 @@ export class UploadService {
         
     }
     
-    async storeFileInDatabase(file: File, delemiter: string){
-        const uploadedFile = await this.minioClientService.upload(file as unknown as BufferedFile, delemiter );
+    async storeFileInDatabase(file: File, delemiter?: string, headerRowCount?: string){
+        const uploadedFile = await this.minioClientService.uploadFile(file as unknown as BufferedFile, delemiter, headerRowCount);
+        return uploadedFile;
+    }
+
+    async storeGeneratedLinearInDatabase(file: Buffer, headerRowCount?: string){
+        const uploadedFile = await this.minioClientService.uploadGenerated(file, headerRowCount);
         return uploadedFile;
     }
     
@@ -154,22 +161,24 @@ export class UploadService {
     public async uploadFile(queryDto: FileUploadQueryDto, session: string, file: Express.Multer.File):
         Promise<{ rowCount: number, features: string[], head: string[][] }> {
         await this.saveFile(session, file.buffer);
+
         if(queryDto.store == "true")
-            var identifier = await this.storeFileInDatabase(file as unknown as File, queryDto.delimiter);
+            var identifier = await this.storeFileInDatabase(file as unknown as File, queryDto.delimiter, queryDto.headerRowCount);
+        
         return this.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter,
             parseInt(queryDto.headerRowCount, 10), false, queryDto.features, identifier);
     }
 
     public async loadFile(identifier: string, session: string):
     Promise<{ rowCount: number, features: string[], head: string[][] }> {
-        const object = await this.minioClientService.get(identifier);
+        const object = await this.minioClientService.get(identifier, this.getDataFilePath(session));
         console.log(object);
-        //const filename = 
-        //return this.parseFileAndGetFeatures(session, file.buffer, queryDto.delimiter,
-        //parseInt(queryDto.headerRowCount, 10), false, queryDto.features, identifier);
-        
 
-        return null;
+
+        let data = await fs.readFile(object.path);
+        console.log(data);
+        return  this.parseFileAndGetFeatures(session, data, object.delemiter,
+        parseInt(object.headerRowCount, 10), false, undefined, object.filename);        
     }
 
     public async getFileFromLink(urlFileUploadDto: UrlFileUploadDto, session: string):
@@ -189,7 +198,7 @@ export class UploadService {
     }
 
     public async generateLinearDataset(generateLinearDatasetDto: GenerateLinearDatasetDto,
-                                       session: string): Promise<{ rowCount: number, features: string[], head: string[][] } | false> {
+                                       session: string): Promise<{ rowCount: number, features: string[], head: string[][], identifier?: string } | false> {
         const path = this.getDataFilePath(session);
         const cwd = process.cwd();
         const proc = spawn('python3',
@@ -201,11 +210,19 @@ export class UploadService {
                 generateLinearDatasetDto.isOutcomeBinary, generateLinearDatasetDto.discreteCommonCausesNumber,
                 generateLinearDatasetDto.discreteInstrumentsNumber,
                 generateLinearDatasetDto.discreteEffectModifiersNumber, generateLinearDatasetDto.isOneHotEncoded]);
-        return await this.finishGenerating(proc, path, session);
+        const result =  await this.finishGenerating(proc, path, session);
+        if(generateLinearDatasetDto.store && result != false){
+            let file = await fs.readFile(path);
+            var identifier = await this.storeGeneratedLinearInDatabase(file, String(result.head.length));
+            result.identifier = identifier;
+        }
+                                    
+        return result;
+    
     }
 
     private async finishGenerating(proc: ChildProcessWithoutNullStreams, path: string, session: string):
-        Promise<{ rowCount: number, features: string[], head: string[][] } | false> {
+        Promise<{ rowCount: number, features: string[], head: string[][], identifier?: string} | false> {
         const exitCode = await new Promise((resolve) => {
             proc.on('exit', resolve);
         });

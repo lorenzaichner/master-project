@@ -67,6 +67,8 @@ export interface IGenerateLinearDatasetDto {
     discreteInstrumentsNumber?: string;
     discreteEffectModifiersNumber?: string;
     isOneHotEncoded?: string;
+    store?: string;
+    
 }
 
 export interface IGenerateXYDatasetDto {

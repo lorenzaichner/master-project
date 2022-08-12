@@ -28,6 +28,7 @@ export interface LoadedFileMetaData {
   delemiter: string;
   filename: string;
   filetype: AppMimeType;
+  headerRowCount: string;
 }
 
 export type AppMimeType = 'text/csv';

@@ -197,7 +197,7 @@ export class UploadPage {
       return;
     }
     this.fileData = undefined;
-    this.updatePageData(fileData, `Uploaded '${this.uploadFiles[0].name}'`, true);
+    this.updatePageData(fileData, `Loaded '${fileData.identifier}'`, true);
   }
 
 
@@ -394,7 +394,8 @@ export class UploadPage {
       discreteCommonCausesNumber: this.discreteCommonCausesNumber,
       discreteInstrumentsNumber: this.discreteInstrumentsNumber,
       discreteEffectModifiersNumber: this.discreteEffectModifiersNumber,
-      isOneHotEncoded: this.isOneHotEncoded.toString()
+      isOneHotEncoded: this.isOneHotEncoded.toString(),
+      store: this.store,
     }
     let fileData = await this.uploadService.generateLinearDataset(linearDatasetDto);
     GlobalState.dataFileUploaded = true;
