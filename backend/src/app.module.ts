@@ -10,10 +10,12 @@ import { APP_GUARD } from '@nestjs/core';
 import { RedisModule } from './redis/redis.module';
 import { MinioClientModule } from './minio-client/minio-client.module';
 import { ConfigModule } from '@nestjs/config';
+import {CausalDiscoveryModule} from './causaldiscovery/causaldiscovery.module'
 
 
 @Module({
   imports: [
+    CausalDiscoveryModule,
     UploadModule, 
     ResultsModule, 
     SessionModule, 

@@ -21,6 +21,7 @@ export class UploadService {
   public async uploadFile(data: FormData, delimiter: string, headerRowCount: number, store: string, features?: string[]): Promise<FileUploadedResponse['data'] | { errorMessage: string }> {
     const headers = {session: await SessionService.ensureSession()};
     const query: IFileUploadQueryDto = {delimiter, headerRowCount: headerRowCount.toString(), store, features};
+    console.log(JSON.stringify(query))
     const result = await ApiService.post<FileUploadedResponse>(
       '/upload/data',
       data,

@@ -8,6 +8,8 @@ import {GlobalState} from '../global.state';
 import {ResultsPage} from '../results-page/results-page';
 import {ResultsPageState} from '../results-page/results.page.state';
 import {GraphUtil} from 'common/util/GraphUtil';
+import { GraphService } from './graph.service';
+import { SessionService } from '../session/session.service';
 
 export type SelectedMethods = {
   regression: boolean;
@@ -20,7 +22,11 @@ export type SelectedMethods = {
   doubleMl: boolean;
 };
 
-@inject(UploadService, GraphState, ResultsPage)
+export type SelectedCDAlgortihm = {
+  algorithm: string;
+}
+
+@inject(UploadService, GraphState, ResultsPage, GraphService)
 export class Graph {
   graphStyle: Record<string, unknown> = {
     width: '100%',
@@ -55,6 +61,9 @@ export class Graph {
   includeBias = false;
 
 
+  causalDiscoveryAlgorithmsModels = ["ANM", "CDS", "GNN", "IGCI", "Jarfo", "NCC", "RCC", "RECI", "GS", "IAMB", "MMPC"]
+  cdAlgorithm: string = this.causalDiscoveryAlgorithmsModels[0];
+
   /**
    * two last selected nodes, used to add an edge by clicking nodes intead of typing their names
    * from-to format
@@ -82,9 +91,12 @@ export class Graph {
     private uploadService: UploadService,
     private graphState: GraphState,
     private resultsPage: ResultsPage,
+    private graphService: GraphService,
   ) {
     //
   }
+
+ 
 
   // TODO adjust / clean up?
   public addNode() {
@@ -208,6 +220,18 @@ export class Graph {
       doubleMl: false
     };
   }
+
+  algorithmChanged(){
+    this.cdAlgorithm;
+  }
+
+  private async processCausalDiscovery(){
+    const algorithm = this.cdAlgorithm;
+    console.log(algorithm);
+    await this.graphService.genereateGraph(algorithm);
+    return;
+  }
+
 
   private removeSelectedEdges() {
     this.graph.edges(':selected').remove();
@@ -486,6 +510,7 @@ export class Graph {
       this.ivs = GraphState.modelData.ivs.slice(0);
     }
   }
+
 
   detached() {
     if (Object.keys(this.graph).length > 0) {

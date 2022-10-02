@@ -328,10 +328,6 @@ export class UploadPage {
     this.updatePageData(fileData, `Loaded the rest of the data`, false);
   }
 
-  private async storeData(){
-    
-  }
-
   private static checkIfInputIsInteger(inputString: string): boolean {
     return Number.isInteger(Number(inputString)) && inputString !== '';
   }
@@ -395,7 +391,7 @@ export class UploadPage {
       discreteInstrumentsNumber: this.discreteInstrumentsNumber,
       discreteEffectModifiersNumber: this.discreteEffectModifiersNumber,
       isOneHotEncoded: this.isOneHotEncoded.toString(),
-      store: this.store,
+      store: this.store.toString(),
     }
     let fileData = await this.uploadService.generateLinearDataset(linearDatasetDto);
     GlobalState.dataFileUploaded = true;
@@ -422,7 +418,8 @@ export class UploadPage {
       commonCausesNumber: this.commonCausesNumberXY,
       effect: this.effectXY.toString(),
       isLinear: this.isLinearXY.toString(),
-      standardDeviationError: this.standardDeviationErrorXY
+      standardDeviationError: this.standardDeviationErrorXY,
+      store: this.store.toString(),
     }
     let fileData = await this.uploadService.generateXYDataset(xyDatasetDto);
     GlobalState.dataFileUploaded = true;

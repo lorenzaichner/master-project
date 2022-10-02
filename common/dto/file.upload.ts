@@ -77,4 +77,5 @@ export interface IGenerateXYDatasetDto {
     effect: string;
     isLinear: string;
     standardDeviationError: string;
+    store?: string;
 }

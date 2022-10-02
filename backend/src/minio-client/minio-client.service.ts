@@ -9,10 +9,13 @@ const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/"; //config.get
 //const FILE_DIR = config.get<string>('Upload.StorageDir');
 // both at the same dir, at least for now
 
+const HEADER_ROW_COUNT_GEN_LINEAR = 1;
+
 @Injectable()
 export class MinioClientService {
   constructor(private readonly minio: MinioService) {
     this.logger = new Logger('MinioService');
+    
   }
 
   private readonly logger: Logger;
@@ -28,7 +31,7 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ,bucketName: 
   
   const metaData = {
     'Delemiter' : ',',
-    'HeaderRowCount' : headerRowCount,
+    'HeaderRowCount' : HEADER_ROW_COUNT_GEN_LINEAR,
     'Filetype': "Generated linear Dataset",
     'Filename': "Generated linear Dataset",
   };
@@ -126,10 +129,7 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ,bucketName: 
     const object = await this.client.getObject(bucketName, identifier);
     object.on("data", (chunk) => fileStream.write(chunk));
     
-    object.on("end", () => console.log("Finished writing"));
-    
-
-        
+    object.on("end", () => console.log("Finished writing"));        
     return metaData;
     
 

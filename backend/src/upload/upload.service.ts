@@ -211,7 +211,7 @@ export class UploadService {
                 generateLinearDatasetDto.discreteInstrumentsNumber,
                 generateLinearDatasetDto.discreteEffectModifiersNumber, generateLinearDatasetDto.isOneHotEncoded]);
         const result =  await this.finishGenerating(proc, path, session);
-        if(generateLinearDatasetDto.store && result != false){
+        if(generateLinearDatasetDto.store == "true" && result != false){
             let file = await fs.readFile(path);
             var identifier = await this.storeGeneratedLinearInDatabase(file, String(result.head.length));
             result.identifier = identifier;
@@ -245,7 +245,7 @@ export class UploadService {
     }
 
     public async generateXYDataset(generateXYDatasetDto: GenerateXYDatasetDto, session: string):
-        Promise<{ rowCount: number, features: string[], head: string[][] } | false> {
+        Promise<{ rowCount: number, features: string[], head: string[][], identifier?: string } | false> {
         const path = this.getDataFilePath(session);
         const cwd = process.cwd();
         const proc = spawn('python3',
@@ -253,6 +253,12 @@ export class UploadService {
                 generateXYDatasetDto.commonCausesNumber,
                 generateXYDatasetDto.effect, generateXYDatasetDto.isLinear, generateXYDatasetDto.standardDeviationError
             ]);
-        return await this.finishGenerating(proc, path, session);
+        const result = await this.finishGenerating(proc, path, session);
+        if(generateXYDatasetDto.store == "true" && result != false){
+            let file = await fs.readFile(path);
+            var identifier = await this.storeGeneratedLinearInDatabase(file, String(result.head.length));
+            result.identifier = identifier;
+        } 
+        return result;
     }
 }

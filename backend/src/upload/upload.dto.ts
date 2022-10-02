@@ -64,15 +64,16 @@ export class UrlFileUploadDto implements IUrlFileUploadDto {
     @IsString()
     delimiter!: string;
 
-    @IsBoolean()
-    store!: string;
-
     @IsNumberString()
     headerRowCount!: string;
 
     @IsOptional()
     @IsString({each: true})
     features?: string[];
+
+    @IsOptional()
+    @IsString()
+    store: string;   
 }
 
 // tslint:disable-next-line:max-classes-per-file
@@ -85,9 +86,6 @@ export class GenerateLinearDatasetDto implements IGenerateLinearDatasetDto {
 
     @IsNumberString()
     commonCausesNumber: string;
-
-    @IsBoolean()
-    store!: string;
 
     @IsNumberString()
     @IsOptional()
@@ -129,6 +127,10 @@ export class GenerateLinearDatasetDto implements IGenerateLinearDatasetDto {
     @IsOptional()
     isTreatmentBinary: string;
 
+    @IsOptional()
+    @IsString()
+    store: string;   
+
 }
 
 // tslint:disable-next-line:max-classes-per-file
@@ -140,5 +142,8 @@ export class GenerateXYDatasetDto implements IGenerateXYDatasetDto {
     isLinear: string;
     samplesNumber: string;
     standardDeviationError: string;
+    @IsOptional()
+    @IsString()
+    store: string;   
 }
 

@@ -141,7 +141,7 @@ export class UploadController {
         const result = await this.uploadService.generateXYDataset(generateXYDatasetDto, session);
         if (result !== false) {
             return {
-                data: result as { rowCount: number, features: string[], head: string[][] },
+                data: result as { rowCount: number, features: string[], head: string[][], identifier: string },
                 success: true
             };
         } else {
