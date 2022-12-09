@@ -1,22 +1,42 @@
-import {Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query, UploadedFile, UseInterceptors} from '@nestjs/common';
-import {GraphGenerationResponse} from 'common/response/graph/graph.response';
+import {Body, Controller, Get, HttpException, HttpStatus, Header, Post, Query, Req, UploadedFile, UseInterceptors, Param} from '@nestjs/common';
+import { SuccessResponse } from 'common/response/basic.response';
+import {CDResponse} from 'common/response/graph/graph.response';
 import {Session} from 'src/decorators/session.decorator';
 import { CausalDiscoveryService } from './causaldiscovery.service';
+import {IStartCausalDiscovery} from 'common/dto/graph.generatecd';
 
 @Controller('/CausalDiscovery')
 export class CausalDiscoveryController{
     constructor(private readonly causalDiscoverySercive: CausalDiscoveryService){}
 
-    @Get('/generate/:algorithm')
+    @Post('/generate')
     public async generateGraph(
-        @Param('algorithm') algorithm: string,
-        @Session() session: string
-        ){
-            console.log(algorithm);
-            return{
-                data: this.causalDiscoverySercive.generateGraph(session, algorithm)
+        @Body() body:IStartCausalDiscovery,
+        @Session() session: string,
+        ):Promise<SuccessResponse>{
+            console.log(body);
+            console.log(session);
+            this.causalDiscoverySercive.generateGraph(session, body.cd_algorithm, body.recovery_algorithm, body.delimiter);
+            return {success: true};
+        }
+
+
+    @Get('check/:cd_algorithm/:recovery_algorithm')
+    public async checkForGraph( 
+        @Param("cd_algorithm") cd_algorithm: String,
+        @Param("recovery_algorithm") recovery_algorithm: String,
+        @Session("") session: string):Promise<CDResponse> {   
+        const res = await this.causalDiscoverySercive.getGraph(session, cd_algorithm, recovery_algorithm);
+
+        if(res === false) {
+            return {
+             success: true,
+             available: false   
             }
         }
+        return {
+            success: true,
+            ...res,
+        };    
     }
-
-
+}

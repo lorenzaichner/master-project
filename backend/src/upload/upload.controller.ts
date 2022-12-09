@@ -18,8 +18,7 @@ import {Logger} from '../log/logger';
 @Controller('/upload')
 export class UploadController {
     constructor(private readonly uploadService: UploadService,
-                private readonly resultsService: ResultsService) {
-    }
+                private readonly resultsService: ResultsService) {}   
 
     @Post('/data')
     @UseInterceptors(FileInterceptor('file'))
@@ -35,7 +34,7 @@ export class UploadController {
         };
     }
 
-    @Get('/file/:identifier')
+    @Get('/file/:identifier') //TODO: CHANGE 
     public async loadData(
         @Param('identifier') identifier: string,
         @Session() session: string

@@ -10,6 +10,12 @@ import {ResultsPageState} from '../results-page/results.page.state';
 import {GraphUtil} from 'common/util/GraphUtil';
 import { GraphService } from './graph.service';
 import { SessionService } from '../session/session.service';
+import { SuccessResponse } from 'common/response/basic.response';
+import {CDResponse, GeneratedGraph} from 'common/response/graph/graph.response';
+import { initialize } from 'aurelia-pal-nodejs';
+
+const CDT_GRAPH_REQUEST = 60;
+const CDT_WAIT_MS_REQUEST = 5000;
 
 export type SelectedMethods = {
   regression: boolean;
@@ -24,6 +30,17 @@ export type SelectedMethods = {
 
 export type SelectedCDAlgortihm = {
   algorithm: string;
+}
+
+
+
+export type ResultCDAlgorithm = {
+  recovery:String;
+  causal_discovery:String;
+  status: number; //0 = loading, 1 = success, 2 = error
+  graph?: String;
+  score?: String ;
+  msg?: String;
 }
 
 @inject(UploadService, GraphState, ResultsPage, GraphService)
@@ -49,7 +66,6 @@ export class Graph {
   commonCauses: string[] = [];
   addIVCurrent: string | null;
   ivs: string[] = [];
-
   models = ["Lasso Regression", "Gradient Boosting Regression"];
   ivMethodInstrument: string | null = null;
   regDiscontVarName: string | null = null;
@@ -60,9 +76,16 @@ export class Graph {
   polynomialDegree: string = "1";
   includeBias = false;
 
+  causalDiscoveryAlgorithmsModels = ["ANM", "BivariateFit", "CDS", "IGCI", "RECI", "GES", "GIES", "LiNGAM"];
+  skeletonRecoveryAlgoritms = ["ARD", "DecisionTreeRegression", "Glasso", "LinearSVRL2"];
+  causalDiscovery: string;// = this.causalDiscoveryAlgorithmsModels[0];
+  recovery: string;// = this.skeletonRecoveryAlgoritms[0];
 
-  causalDiscoveryAlgorithmsModels = ["ANM", "CDS", "GNN", "IGCI", "Jarfo", "NCC", "RCC", "RECI", "GS", "IAMB", "MMPC"]
-  cdAlgorithm: string = this.causalDiscoveryAlgorithmsModels[0];
+  causalDiscoveryResults: ResultCDAlgorithm[] = [];
+  causalDiscoveryEdgesId: String[] =[];
+  initGraph: Boolean = false;
+
+
 
   /**
    * two last selected nodes, used to add an edge by clicking nodes intead of typing their names
@@ -221,15 +244,154 @@ export class Graph {
     };
   }
 
-  algorithmChanged(){
-    this.cdAlgorithm;
+  cdAlgorithmChanged(mathode: String){
+    this.causalDiscovery;
+  }
+  recoveryAlgorithmChanges(){
+    this.recovery;
   }
 
   private async processCausalDiscovery(){
-    const algorithm = this.cdAlgorithm;
-    console.log(algorithm);
-    await this.graphService.genereateGraph(algorithm);
+    
+    if(this.causalDiscovery == null || this.recovery == null )
+    {
+      this.statusLine.setError("Please choose both algorithms.")
+      return;
+    }
+    
+    if (this.graph == null) {
+      this.statusLine.setError('No data found.');
+      return;
+    }
+
+    
+    var dublicate:boolean = false; 
+    var entry;
+
+    for(var i = 0; i < this.causalDiscoveryResults.length; i++) {
+      if(this.causalDiscoveryResults[i].recovery == this.recovery && this.causalDiscoveryResults[i].causal_discovery == this.causalDiscovery){
+        entry = i;
+        dublicate = true;
+        this.causalDiscoveryResults[i].status = 0;
+      }
+    }
+
+    if(!dublicate) {
+      const data: ResultCDAlgorithm = {
+        recovery: this.recovery,
+        causal_discovery: this.causalDiscovery,
+        status: 0,
+  
+      }   
+  
+      this.causalDiscoveryResults.push(data);
+      entry = this.causalDiscoveryResults.length - 1;
+    }
+
+
+    await this.graphService.genereateGraph(this.causalDiscovery, this.recovery, GlobalState.dataFileDelimiter);
+
+    for(let i = 0; i < CDT_GRAPH_REQUEST; i++) {
+      var result = await this.graphService.checkCausalDiscoveryResults(this.causalDiscovery, this.recovery)  
+      if (!((result as (SuccessResponse & { available: false })).available === false)) {
+        break;
+      }
+      await this.waitMs(CDT_WAIT_MS_REQUEST);
+    }
+
+    if((result as (SuccessResponse & GeneratedGraph)).error) {
+      //TODO ERROR MESSAGE.
+      this.causalDiscoveryResults[entry].status = 1;
+    }
+    else {
+      this.addGraph((result as (SuccessResponse & GeneratedGraph)).graph, entry);
+    }
+    //this.selectedGraphOption = 2
     return;
+  }
+
+  private async addGraph(graph: Buffer, entry: any) {
+    
+    var str_graph: String = graph.toString();
+    console.log(str_graph);
+    var temp:String = str_graph.split('\'')[1]
+    var algorithm_used: String[] = temp.split('_');
+
+    var lines = str_graph.split('__RESULT__\n')[1];
+
+    this.causalDiscoveryResults[entry].graph = lines;
+    this.causalDiscoveryResults[entry].status = 1;
+    
+  }
+
+  private deleteEdgesInGraph(){
+    
+  }
+
+  private loadGraph(cd_graph: String) {
+      //TODO: make list whoch stores current edges in cd-graph. If this is not empty. Delete these edges: this.graph.edges(':selected').remove(); and add new ones.
+      if(!this.initGraph){
+        this.graph = cytoscape({
+          container: this['graph'],
+          elements: {
+            nodes: GraphState.nodes,
+            edges: GraphState.edges
+          },
+          layout: GraphState.layout,
+          style: [
+            {
+              selector: 'node',
+              style: {
+                'label': 'data(id)',
+              },
+            },
+            {
+              selector: 'edge',
+              style: {
+                'width': (el) => el.selected() ? 5 : 3,
+                'line-color': '#ccc',
+                'target-arrow-color': '#ccc',
+                'target-arrow-shape': 'triangle',
+                'curve-style': 'bezier'
+              }
+            }
+          ]
+        });
+        this.initGraph = true;
+      }
+
+
+    //this.graph.edges().remove()
+    var edges:String[] = cd_graph.split('\n');
+    for(var i = 0; i < this.causalDiscoveryEdgesId.length; i++){
+      this.graph.edges(this.causalDiscoveryEdgesId[i]).remove();
+    }
+    this.causalDiscoveryEdgesId = [];
+
+    for(var i:number = 0; i<edges.length; i++) {
+      if(edges[i] == ""){
+        continue;
+      }
+      var source:String = edges[i].split("->->->")[0];
+      var target:String = edges[i].split("->->->")[1];
+      this.causalDiscoveryEdgesId.push(source+"_"+target);
+      this.graph.add({
+        group: 'edges',
+        data: {
+          id: source+"_"+target,
+          source: source,
+          target: target,
+          directed:true
+        }
+      });
+    }
+
+  }
+
+  private async waitMs(ms: number): Promise<void> {
+    await new Promise(resolve => {
+      setTimeout(resolve, ms);
+    });
   }
 
 

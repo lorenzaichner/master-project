@@ -1,6 +1,6 @@
 <template>
   <require from="../status/status.line"></require>
-  <div class="container-fluid">
+  <div class="container-fluid ">
     <div class="row bg-success">
       <div class="col">
         Options:
@@ -16,27 +16,71 @@
       </div>
     </div>
 
-    <div class="row">
+    <div if.bind="selectedGraphOption === 2 || selectedGraphOption === 3">
+    <div class="m-3 p-3 bg bg-light border border-primary">
+      <p class="font-weight-bold">Generate directed Graph with:</p>
+      <div class="col mb-3">
+        Algorithm for skeletton recovery: 
+        <select value.bind="recovery" bootstrap-select>
+          <option model.bind="null">Skeleton Recovery Algorithm...</option>
+          <option repeat.for="model of skeletonRecoveryAlgoritms" model.bind="model">${model}</option>
+        </select>
+      </div>
+      <div class="col mb-3">
+        Algoithm to direct graph:
+        <select value.bind="causalDiscovery" bootstrap-select>
+          <option model.bind="null">Causal Discovery Algorithm..</option>
+          <option repeat.for="model of causalDiscoveryAlgorithmsModels" model.bind="model">${model}</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary" click.trigger="processCausalDiscovery()">Generate</button>
+      <small id="fileDescription" class="form-text text-muted">This action could take some time due to complex computations</small>
+  
+      </div>
+        <div class="row mr-3 ml-3" style="height: 60%; position: absolute; width:96.8%">
+          <div class="col-4 bg bg-light border border-primary ">
+            <p class="font-weight-bold">Generated Graphs:</p>
+            <div class="row" repeat.for="res of causalDiscoveryResults"> 
+              <div class="col-8 p-2">
+                <div if.bind="res.status === 0" class="rounded bg bg-info border border-primary p-1">
+                  <span class="align-middle">Load result for ${res.recovery} and ${res.causalDiscovery}</span>
+                </div>
+                <div if.bind="res.status === 1" class="rounded bg bg-info border border-primary p-1">
+                  <span class="align-middle">${res.recovery} and ${res.causalDiscovery} are loaded.</span>
+                </div>
+                <div if.bind="res.status === 2" class="rounded bg bg-info border border-primary p-1">
+                  <span class="align-middle">Error occured for ${res.recovery} and ${res.causalDiscovery}.</span>
+                </div>
+              </div>
+              <div class="col-4 p-2">
+                <div if.bind="res.status === 0">
+                  <div class="spinner-border d-flex justify-content-center" role="status">
+                    <span class="sr-only"></span>
+                  </div>
+                </div>
+                <div if.bind="res.status === 1">
+                  <button type="submit" class="btn btn-primary d-flex justify-content-center" click.trigger="loadGraph(res.graph)">Load Graph</button>
+                </div>
+                <div if.bind="res.status === 2">
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-8 bg bg-light border border-primary" ref="graph" if.bind="selectedGraphOption === 2" style.bind="graphStyle">
+
+          </div>
+        </div>
+  
+      </div>
+    </div> 
+
+    <div if.bind="selectedGraphOption === 1 || selectedGraphOption === 0" class="row">
       <div class="col-8">
         <div ref="graph" if.bind="selectedGraphOption === 1" style.bind="graphStyle"></div>
         <div if.bind="selectedGraphOption === 0" class="m-3 p-3 bg bg-light border border-primary">
           <label for="file">Graph file</label>
           <input type="file" class="form-control-file" id="file" aria-describedby="fileDescription" files.bind="uploadFiles">
-          <small id="fileDescription" class="form-text text-muted">Custom graph file to upload</small>
-          <!-- <button type="submit" class="btn btn-primary" click.trigger="uploadFile()">Upload file</button> -->
-        </div>
-      </div>
-
-      <div class="col-8">
-        <div ref="graph" if.bind="selectedGraphOption === 1" style.bind="graphStyle"></div>
-        <div if.bind="selectedGraphOption === 2" class="m-3 p-3 bg bg-light border border-primary">
-          <label for="file">Generate Graph by the following Algorithm...</label>
-          <div class="col mb-3">
-            <select change.delegate="algorithmChanged(changedValue)">
-              <option id="causalDiscovery" repeat.for="model of causalDiscoveryAlgorithmsModels" model.bind="model">${model}</option>
-            </select>
-            <button type="submit" class="btn btn-primary" click.trigger="processCausalDiscovery()">Generate</button>
-          </div>
           <small id="fileDescription" class="form-text text-muted">Custom graph file to upload</small>
           <!-- <button type="submit" class="btn btn-primary" click.trigger="uploadFile()">Upload file</button> -->
         </div>
@@ -156,7 +200,12 @@
               <input id="selectMethodWeighting" type="checkbox" checked.two-way="selectedMethods.weighting"><span class="ml-4">Weighting</span>
             </div>
 
-            <div class="border-bottom border-primary mb-2">Double
+            <div class="border-bottom border-primary mb-2">
+              <div class="row">
+                <div class="col">
+                  <input id="selectMethodIVs" type="checkbox" checked.two-way="selectedMethods.ivs"><span class="ml-4">Instrumental Variables</span>
+                </div>
+                <div class="col mb-3" if.bind="selectedMethods.ivs === true">
                   Specify instrument:
                   <select id="ivMethodInstrument" value.bind="ivMethodInstrument">
                     <option model.bind="null">Choose...</option>

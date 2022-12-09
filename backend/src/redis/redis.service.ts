@@ -9,7 +9,8 @@ export class RedisService {
       return;
     }
     try {
-      RedisService.instance = new Redis({ lazyConnect: true, host: 'redis' });
+      //RedisService.instance = new Redis({ lazyConnect: true, host: 'redis' });
+      RedisService.instance = new Redis({ lazyConnect: true, host: '127.0.0.1', port: 6379});
       await RedisService.instance.connect();
     } catch (e) {
       Logger.getInstance().log('error', `redis failed to connect, error: ${e}`);

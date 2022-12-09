@@ -31,7 +31,7 @@ export class UploadService {
     return result.data;
   }
 
-  public async loadStoredFile(identifier: string){
+  public async loadStoredFile(identifier: string){ //TODO don pass identifier in URL.
     const headers = {session: await SessionService.ensureSession()};
     const formData = new FormData();
     formData.append('identifier', identifier);
