@@ -131,8 +131,6 @@ export class Graph {
       entry = this.causalDiscoveryResults.length - 1;
     }
 
-    
-
     await this.graphService.genereateGraph(this.causalDiscovery, this.recovery, GlobalState.dataFileDelimiter);
 
     for(let i = 0; i < CDT_GRAPH_REQUEST; i++) {
