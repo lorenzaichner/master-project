@@ -1,0 +1,67 @@
+
+<template>
+    <require from="../status/status.line"></require>
+    <div class="container-fluid ">
+        <div class="m-3 p-3 bg bg-light border border-primary">
+          <p class="font-weight-bold">Generate directed Graph with:</p>
+          <div class="col mb-3">
+            Algorithm for skeletton recovery: 
+            <select disabled.bind="loading" id="recovery" value.bind="recovery" bootstrap-select>
+              <option model.bind="null">Skeleton Recovery Algorithm...</option>
+              <option repeat.for="model of skeletonRecoveryAlgoritms" model.bind="model">${model}</option>
+            </select>
+          </div>
+          <div class="col mb-3">
+            Algoithm to direct graph:
+            <select disabled.bind="loading" id="causalDiscovery" value.bind="causalDiscovery" bootstrap-select>
+              <option model.bind="null">Causal Discovery Algorithm..</option>
+              <option repeat.for="model of causalDiscoveryAlgorithmsModels" model.bind="model">${model}</option>
+            </select>
+          </div>
+          <button disabled.bind="loading" type="submit" class="btn btn-primary" click.trigger="processCausalDiscovery()">Generate</button>
+          <small id="fileDescription" class="form-text text-muted">This action could take some time due to complex computations</small>
+      
+          </div>
+            <div class="row mr-3 ml-3" style="height: 60%; position: absolute; width:96.8%">
+              <div class="col-4 bg bg-light border border-primary ">
+                <p class="font-weight-bold">Generated Graphs:</p>
+                <div class="row" repeat.for="res of causalDiscoveryResults"> 
+                  <div class="col-8 p-2">
+                    <div if.bind="res.status === 0" class="rounded bg bg-info border border-primary p-1">
+                      <span class="align-middle">Load result for ${res.recovery} and ${res.causal_discovery}</span>
+                    </div>
+                    <div if.bind="res.status === 1" class="rounded bg bg-info border border-primary p-1">
+                      <span class="align-middle">${res.recovery} and ${res.causal_discovery} are loaded.</span>
+                    </div>
+                    <div if.bind="res.status === 2" class="rounded bg bg-info border border-primary p-1">
+                      <span class="align-middle">Error occured for ${res.recovery} and ${res.causal_discovery}.</span>
+                    </div>
+                  </div>
+                  <div class="col-4 p-2">
+                    <div if.bind="res.status === 0">
+                      <div class="spinner-border d-flex justify-content-center" role="status">
+                        <span class="sr-only"></span>
+                      </div>
+                    </div>
+                    <div class="row" if.bind="res.status === 1">
+                        <div class="col">
+                          <button type="submit" class="btn btn-primary d-flex justify-content-center" click.trigger="loadGraph(res)">Load</button> 
+                        </div>
+                        <div class="col">
+                          <button class="btn btn-primary d-flex justify-content-center bg-danger text-white" click.trigger="deleteGraph(res)">Delete</button>
+                        </div>
+                    </div>
+                    <div if.bind="res.status === 2">
+                      <label>Error!</label>
+                      <button class="btn btn-primary ml-3 d-flex justify-content-center bg-danger text-white" click.trigger="deleteGraph(res)">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-8 bg bg-light border border-primary" ref="graph" style.bind="graphStyle">
+              </div>
+            </div>
+          </div>
+        </div> 
+        <status-line view-model.ref="statusLine"></status-line>
+</template>

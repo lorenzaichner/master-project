@@ -4,6 +4,7 @@ import {UploadPageState} from './upload-page.state';
 import {GlobalState} from '../global.state';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
 import {GraphState} from '../graph/graph.state';
+import { CausalDiscoveryState } from '../causal-discovery/causal-discovery.state';
 import {StatusLine} from '../status/status.line';
 import {IGenerateLinearDatasetDto, IGenerateXYDatasetDto} from "common/dto/file.upload";
 
@@ -131,6 +132,7 @@ export class UploadPage {
 
   private async identifierChanged(): Promise<void>{
     this.uploadPageState.set('identifier', this.identifier);
+    GlobalState.identifier = this.identifier;
   }
 
   private selectedHeaderOptionIdChanged(newVal: string, oldVal?: string): void {
@@ -171,7 +173,7 @@ export class UploadPage {
     }
   }
 
-  private async loadStoredFile(): Promise<void> {  //check promise, because we get in return the number to regain data
+  private async loadStoredFile(): Promise<void> {
     if (this.identifier == null || this.identifier[0] == null) {
       this.setErrorStatus('No identifier selected');
       return;

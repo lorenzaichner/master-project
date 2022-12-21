@@ -3,6 +3,9 @@ import { MinioService } from 'nestjs-minio-client';
 import { BufferedFile, LoadedFileMetaData } from './file.model';
 import * as crypto from 'crypto';
 import { dirSync } from 'tmp';
+import { runInThisContext } from 'vm';
+import { Console } from 'console';
+import { GeneratedGraph } from 'common/response/graph/graph.response';
 
 
 const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/"; //config.get<string>('Upload.StorageDir');
@@ -19,13 +22,13 @@ export class MinioClientService {
   }
 
   private readonly logger: Logger;
-  private readonly bucketName = process.env.MINIO_BUCKET_NAME;
+  //private readonly bucketName = process.env.MINIO_BUCKET_NAME;
 
-  public get client() {
+  public getClient() {
     return this.minio.client;
   }
 
-public async uploadGenerated(file: Buffer, headerRowCount?: string ,bucketName: string = this.bucketName){
+public async uploadGenerated(file: Buffer, headerRowCount?: string ){
   const timestamp = Date.now().toString();
   const identifier = Math.random().toString(36).slice(2);
   
@@ -37,32 +40,18 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ,bucketName: 
   };
 
   // We need to append the extension at the end otherwise Minio will save it as a generic file
-  const fileName = identifier;
-
-  this.client.putObject(
-    bucketName,
-    fileName,
-    file,    
-    metaData
-    /*function (err, res) {
-      if (err) {
-        throw new HttpException(
-          'Error uploading file',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    },
-    */
-  );
-
-  return identifier; 
+  try{
+    return this.store(file as any as BufferedFile, metaData);
+  }catch(e){
+    console.log("Error: "+e);
+  }
 }
 
   public async uploadFile(
     file: BufferedFile,
     delemiter?: string, 
     headerRowCount?: string,
-    bucketName: string = this.bucketName,
+    //bucketName: string = this.bucketName,
   ) {
     if (!(file.mimetype.includes('csv'))) {
       throw new HttpException(
@@ -79,7 +68,6 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ,bucketName: 
       file.originalname.lastIndexOf('.'),
       file.originalname.length,
     );
-    const identifier = Math.random().toString(36).slice(2);
     
     const metaData = {
       'Filetype': file.mimetype,
@@ -88,53 +76,85 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ,bucketName: 
       'HeaderRowCount' : headerRowCount,
     };
 
-    // We need to append the extension at the end otherwise Minio will save it as a generic file
-    const fileName = identifier;
 
-    this.client.putObject(
-      bucketName,
-      fileName,
-      file.buffer,
-      metaData,
-      /*function (err, res) {
-        if (err) {
-          throw new HttpException(
-            'Error uploading file',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-      },
-      */
-    );
-
-    return identifier; 
+    try{
+      return this.store(file, metaData); 
+    }catch(e){
+      console.log("Error: "+e);
+    }
+   
   }
 
-  async get(identifier: string, path: string, bucketName: string = this.bucketName): Promise<LoadedFileMetaData>{
-    
-    var meta  = await this.client.statObject(bucketName, identifier);
-    const metaData: LoadedFileMetaData = {
-      delemiter: meta.metaData.delemiter,
-      filename: meta.metaData.filename,
-      filetype: meta.metaData.filetype,
-      path: path,
-      headerRowCount: meta.metaData.headerrowcount,
-    };
+  private async store(file: BufferedFile, metaData: any, filename:string = "data"):Promise<string>
+  {
+    try{
+      let checkIdentifierExists: Boolean = true;
+      let identifier: string;
       
-    const fs = require("fs");
-    
-    // read object in chunks and store it as a file
-    const fileStream = fs.createWriteStream(metaData.path);
-
-    const object = await this.client.getObject(bucketName, identifier);
-    object.on("data", (chunk) => fileStream.write(chunk));
-    
-    object.on("end", () => console.log("Finished writing"));        
-    return metaData;
-    
+      while(checkIdentifierExists) {
+        identifier = Math.random().toString(36).slice(2);
+        checkIdentifierExists = await this.getClient().bucketExists(identifier);     
+      }
+      await this.getClient().makeBucket(identifier, "eu-central-1");
+      await this.getClient().putObject(identifier, filename, file.buffer, metaData); 
+      return identifier;
+    }catch(e){
+      throw e;
+    }
 
   }
 
-  async delete(objetName: string, bucketName: string = this.bucketName) {
+  public async get(identifier: string, path: string): Promise<LoadedFileMetaData>{
+    try{
+      var datav2 = await this.getClient().listObjectsV2(identifier);
+      var datav1 = await this.getClient().listObjects(identifier);
+      var meta  = await this.getClient().statObject(identifier, "data");
+      const metaData: LoadedFileMetaData = {
+        delemiter: meta.metaData.delemiter,
+        filename: meta.metaData.filename,
+        filetype: meta.metaData.filetype,
+        path: path,
+        headerRowCount: meta.metaData.headerrowcount,
+      };
+        
+      const fs = require("fs");
+      
+      // read object in chunks and store it as a file
+      const fileStream = fs.createWriteStream(metaData.path);
+  
+      const object = await this.getClient().getObject(identifier, "data");
+      object.on("data", (chunk) => fileStream.write(chunk));
+      
+      object.on("end", () => console.log("Finished writing"));        
+      return metaData;  
+    }catch(e){
+      console.log("Error loading file");
+    }
+  }
+
+  public async storeCausalDiscoveryResults(identifier: string, graph:GeneratedGraph, cd_algorithm:String, skeletton_recovery:String):Promise<Boolean>{
+    
+    var buffer:Buffer = Buffer.from(JSON.stringify(graph), "utf-8");
+    
+    const timestamp = Date.now().toString();
+    const hashedFileName = crypto
+      .createHash('md5')
+      .update(timestamp)
+      .digest('hex');
+
+    const metaData = {
+      'Filetype': "txt",
+      'Filename': skeletton_recovery +"_"+cd_algorithm,
+    };
+
+
+    try{
+      await this.getClient().putObject(identifier, skeletton_recovery +"_"+cd_algorithm, buffer, metaData);
+    }catch(e){
+      console.log("Error: "+e);
+    }
+
+
+    return;
   }
 }

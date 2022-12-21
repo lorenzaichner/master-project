@@ -1,8 +1,10 @@
+import { ResultCDAlgorithm } from '../causal-discovery/causal-discovery';
 import { SelectedMethods } from './graph';
 
 export class GraphState {
   public static nodes: any[] = [];
-  public static edges: any[]  [];
+  public static edges: Array<[string, string]>;
+  public static causalDiscoveryResults: ResultCDAlgorithm[];
 
   public static readonly layout = {
     spacingFactor: 1.5,

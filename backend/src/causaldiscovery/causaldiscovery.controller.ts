@@ -21,12 +21,13 @@ export class CausalDiscoveryController{
         }
 
 
-    @Get('check/:cd_algorithm/:recovery_algorithm')
+    @Get('check/:cd_algorithm/:recovery_algorithm/:identifier')
     public async checkForGraph( 
         @Param("cd_algorithm") cd_algorithm: String,
         @Param("recovery_algorithm") recovery_algorithm: String,
+        @Param("identifier") identifier:string,
         @Session("") session: string):Promise<CDResponse> {   
-        const res = await this.causalDiscoverySercive.getGraph(session, cd_algorithm, recovery_algorithm);
+        const res = await this.causalDiscoverySercive.getGraph(session, cd_algorithm, recovery_algorithm, identifier);
 
         if(res === false) {
             return {

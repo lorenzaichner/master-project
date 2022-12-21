@@ -6,4 +6,5 @@ export class GlobalState {
   public static session: string | null;
   public static dataFileDelimiter = ',';
   public static features: string[] =  [];
+  public static identifier:String;
 }
