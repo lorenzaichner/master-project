@@ -1,12 +1,17 @@
+import { CausalDiscoveryState } from './../causal-discovery/causal-discovery.state';
+import { Graph } from './../graph/graph';
 import {inject, observable} from 'aurelia-framework';
 import {UploadService} from './upload.service'
 import {UploadPageState} from './upload-page.state';
 import {GlobalState} from '../global.state';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
 import {GraphState} from '../graph/graph.state';
-import { CausalDiscoveryState } from '../causal-discovery/causal-discovery.state';
 import {StatusLine} from '../status/status.line';
 import {IGenerateLinearDatasetDto, IGenerateXYDatasetDto} from "common/dto/file.upload";
+import { LoadGraphResponse } from 'common/response/minio/miniograph.response';
+import {CDGraph} from 'common/response/minio/miniograph.response';
+import { ResultCDAlgorithm } from '../causal-discovery/causal-discovery';
+import { rmSync } from 'fs';
 
 export interface IUploadPage {
   uploadFiles?: FileList;
@@ -132,7 +137,6 @@ export class UploadPage {
 
   private async identifierChanged(): Promise<void>{
     this.uploadPageState.set('identifier', this.identifier);
-    GlobalState.identifier = this.identifier;
   }
 
   private selectedHeaderOptionIdChanged(newVal: string, oldVal?: string): void {
@@ -195,11 +199,40 @@ export class UploadPage {
       GlobalState.dataFileUploaded = true;
       GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
     } catch (ex) {
-      this.setErrorStatus(ex.message);
+      this.setErrorStatus("Error loading stored file.");
       return;
     }
+    GlobalState.identifier = identifier;
     this.fileData = undefined;
     this.updatePageData(fileData, `Loaded '${fileData.identifier}'`, true);
+    this.loadStoredGraphs();
+
+ 
+
+  }
+
+  private async loadStoredGraphs(): Promise<void>{
+    const identifier = this.identifier;
+    const result:LoadGraphResponse = await this.uploadService.loadStoredGraph(this.identifier);
+    console.log(result);
+    if(result.success == false){
+      this.setErrorStatus("Error loading stored graph.");
+      return;
+    }
+
+    var graphs:ResultCDAlgorithm[] = [];
+
+    for(var i in result.data) {
+      var graph:ResultCDAlgorithm = {
+        recovery: result.data[i].recovery,
+        causal_discovery: result.data[i].discovery,
+        graph: result.data[i].edges,
+        status: 1
+      }
+      graphs.push(graph);
+    }
+    CausalDiscoveryState.results = graphs;
+    return;
   }
 
 
@@ -228,7 +261,7 @@ export class UploadPage {
     this.updatePageData(fileData, `Uploaded from: '${this.urlPath}'`, true);
   }
 
-  private async uploadFile(): Promise<void> {  //check promise, because we get in return the number to regain data
+  private async uploadFile(): Promise<void> {  
     if (this.uploadFiles == null || this.uploadFiles[0] == null) {
       this.setErrorStatus('no file selected. Please select a file to upload.');
       return;
@@ -255,6 +288,9 @@ export class UploadPage {
       this.setErrorStatus(ex.message);
       return;
     }
+    GlobalState.identifier = fileData.identifier;
+    console.log(fileData.identifier);
+    console.log(GlobalState.identifier);
     this.fileData = undefined;
     this.updatePageData(fileData, `Uploaded '${this.uploadFiles[0].name}'`, true);
   }
@@ -283,7 +319,6 @@ export class UploadPage {
     this.showLoadMoreButton = showLoadMoreButton;
     const nodes = [];
     GlobalState.features = [];
-
     for (const f of fileData.features) {
       GlobalState.features.push(f);
       nodes.push({
@@ -398,6 +433,7 @@ export class UploadPage {
     let fileData = await this.uploadService.generateLinearDataset(linearDatasetDto);
     GlobalState.dataFileUploaded = true;
     GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
+    GlobalState.identifier = fileData.identifier;
     this.fileData = undefined;
     this.updatePageData(fileData, `Generated linear dataset`, true);
   }
@@ -426,6 +462,7 @@ export class UploadPage {
     let fileData = await this.uploadService.generateXYDataset(xyDatasetDto);
     GlobalState.dataFileUploaded = true;
     GraphState.data = null; // reset graph data, otherwise the old graph will be shown if you upload another file
+    GlobalState.identifier = fileData.identifier;
     this.fileData = undefined;
     this.updatePageData(fileData, `Generated XY dataset`, true);
   }

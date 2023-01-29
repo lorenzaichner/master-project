@@ -65,7 +65,7 @@ export class CausalDiscoveryService {
         return Buffer.from(data, "utf-8");
     }
 
-    public async getGraph(session:String, cd_algorithm:String, skeletton_recovery:String, identifier?: string):Promise<GeneratedGraph|false>{
+    public async getGraph(session:String, cd_algorithm:String, skeletton_recovery:String, identifier?: String):Promise<GeneratedGraph|false>{
         const results = await this.redisService.get(`causald_discovery_results_` + skeletton_recovery+`_`+cd_algorithm +`_:${session}`); //TODO save in store function also cd algo + skeleton recovery algo
         if (results == null) {
             return false;
@@ -117,5 +117,9 @@ export class CausalDiscoveryService {
 
         return graph;
 
+    }
+
+    public deleteResult(cd_algorithm:String, skeletton_recovery:String, identifier: String) {
+        this.minioClientService.deleteResult(cd_algorithm, skeletton_recovery, identifier);
     }
 }

@@ -1,3 +1,5 @@
+import { SuccessResponse } from 'common/response/basic.response';
+import { Results } from 'common/response/results/results.response';
 import {Injectable} from '@nestjs/common';
 import {promises as fs} from 'fs';
 import * as config from 'config';
@@ -18,6 +20,8 @@ import { MinioClientService } from 'src/minio-client/minio-client.service';
 import { BufferedFile } from 'src/minio-client/file.model';
 import {FileInterceptor} from '@nestjs/platform-express';
 import { request } from 'http';
+import { CDGraph, LoadGraphResponse } from 'common/response/minio/miniograph.response';
+import { isBoolean } from 'class-validator';
 
 const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/backend"; //config.get<string>('Upload.StorageDir');
 //const FILE_DIR = config.get<string>('Upload.StorageDir');
@@ -169,9 +173,8 @@ export class UploadService {
             parseInt(queryDto.headerRowCount, 10), false, queryDto.features, identifier);
     }
 
-    public async loadFile(identifier: string, session: string):
-    Promise<{ rowCount: number, features: string[], head: string[][] }> {
-        const object = await this.minioClientService.get(identifier, this.getDataFilePath(session));
+    public async loadFile(identifier: string, session: string): Promise<{ rowCount: number, features: string[], head: string[][] }> {
+        const object = await this.minioClientService.getData(identifier, this.getDataFilePath(session));
         console.log(object);
 
 
@@ -179,6 +182,11 @@ export class UploadService {
         console.log(data);
         return  this.parseFileAndGetFeatures(session, data, object.delemiter,
         parseInt(object.headerRowCount, 10), false, undefined, object.filename);        
+    }
+
+    public async loadGraph(identifier: string): Promise<Array<CDGraph>> {
+        var res:Array<CDGraph> =  await this.minioClientService.getGraphs(identifier);
+        return res;          
     }
 
     public async getFileFromLink(urlFileUploadDto: UrlFileUploadDto, session: string):
@@ -256,6 +264,7 @@ export class UploadService {
         const result = await this.finishGenerating(proc, path, session);
         if(generateXYDatasetDto.store == "true" && result != false){
             let file = await fs.readFile(path);
+            console.log(file);
             var identifier = await this.storeGeneratedLinearInDatabase(file, String(result.head.length));
             result.identifier = identifier;
         } 

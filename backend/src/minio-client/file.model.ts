@@ -1,3 +1,4 @@
+import { Graph } from 'common/response/graph/graph.response';
 export interface BufferedFile {
   fieldname: string;
   originalname: string;
@@ -30,5 +31,25 @@ export interface LoadedFileMetaData {
   filetype: AppMimeType;
   headerRowCount: string;
 }
+
+
+
+//{"graph":{"recovery":"ARD","discovery":"IGCI","edges":[["A","B"],["C","D"],["G","F"],["I","J"]]},"error":false,"msg":null}
+export interface LoadedGraph {
+  graph: {  recovery: string,
+    discovery: string,
+    edges: Array<[string, string]>,
+    error: Boolean,
+    msg: string}
+}
+
+export interface LoadedGraphMetadata {
+  recovery: String,
+  discovery: String,
+  filename: string;
+  filetype: AppMimeType;
+  headerRowCount: string;
+}
+
 
 export type AppMimeType = 'text/csv';

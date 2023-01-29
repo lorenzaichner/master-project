@@ -18,7 +18,15 @@
               <option repeat.for="model of causalDiscoveryAlgorithmsModels" model.bind="model">${model}</option>
             </select>
           </div>
-          <button disabled.bind="loading" type="submit" class="btn btn-primary" click.trigger="processCausalDiscovery()">Generate</button>
+          <div class="row" style="width: 20%;">
+            <div class="col-4">
+              <button disabled.bind="loading" type="submit" class="btn btn-primary" click.trigger="processCausalDiscovery()">Generate</button>
+            </div>
+            <div class="col-8">
+              <label show.bind="identifier">Identifier: ${identifier}</label>
+            </div>
+          </div>
+          
           <small id="fileDescription" class="form-text text-muted">This action could take some time due to complex computations</small>
       
           </div>

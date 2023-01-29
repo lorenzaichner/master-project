@@ -1,7 +1,8 @@
 import {SessionService} from '../session/session.service';
 import {ApiService} from '../api.service';
 import {CDResponse} from 'common/response/graph/graph.response';
-import {IStartCausalDiscovery} from 'common/dto/graph.generatecd';
+import {IDeleteCausalDiscovery, IStartCausalDiscovery} from 'common/dto/graph.generatecd';
+import {ICheckCausalDiscovery} from 'common/dto/graph.generatecd';
 import {StringifiableRecord} from 'query-string';
 import { SuccessResponse } from 'common/response/basic.response';
 import { GlobalState } from '../global.state';
@@ -23,13 +24,42 @@ export class GraphService {
 
         return result.success;
     }
-
+    
     public async checkCausalDiscoveryResults(cd_algorithm: string, recovery_algorithm: string): Promise<CDResponse>{
-      const headers = {session: await SessionService.ensureSession()};
-      const result = await ApiService.get<CDResponse>(
-        '/CausalDiscovery/check/'+cd_algorithm+"/"+recovery_algorithm+"/"+GlobalState.identifier,
-        headers);
+      var requestBody: ICheckCausalDiscovery;
+      var identifier: String = GlobalState.identifier;
+      if(identifier == null){
+        requestBody = {cd_algorithm, recovery_algorithm};
+      } else {
+        requestBody = {cd_algorithm, recovery_algorithm, identifier};
+      }  
+      const result = await ApiService.post<CDResponse>(
+        '/CausalDiscovery/check',
+        JSON.stringify(requestBody),
+        undefined,
+        {
+          "Content-Type": "application/json",
+           session: await SessionService.ensureSession()
+         },);
 
       return result as SuccessResponse & CDResponse;
     }
-}
+    
+  //Use Post, beacouse send data in body
+    public async deleteResult(cd_algorithm: String, recovery_algorithm: String): Promise<void>{
+      var requestBody: IDeleteCausalDiscovery;
+      var identifier: String = GlobalState.identifier;
+      requestBody = {cd_algorithm, recovery_algorithm, identifier};
+      console.log(requestBody);
+      await ApiService.post<SuccessResponse>(
+        '/CausalDiscovery/delete',
+        JSON.stringify(requestBody),
+        undefined,
+        {
+          "Content-Type": "application/json",
+           session: await SessionService.ensureSession()
+         },);
+    }
+    
+
+ }

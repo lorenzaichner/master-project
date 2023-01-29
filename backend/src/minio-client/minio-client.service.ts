@@ -1,11 +1,16 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { MinioService } from 'nestjs-minio-client';
-import { BufferedFile, LoadedFileMetaData } from './file.model';
+import { BufferedFile, LoadedFileMetaData, LoadedGraph, LoadedGraphMetadata } from './file.model';
 import * as crypto from 'crypto';
 import { dirSync } from 'tmp';
 import { runInThisContext } from 'vm';
 import { Console } from 'console';
 import { GeneratedGraph } from 'common/response/graph/graph.response';
+import { CDGraph} from 'common/response/minio/miniograph.response';
+import { async } from 'rxjs';
+import { BucketItemFromList } from 'minio';
+import { resolve } from 'dns';
+import { rejects, throws } from 'assert';
 
 
 const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/"; //config.get<string>('Upload.StorageDir');
@@ -22,6 +27,7 @@ export class MinioClientService {
   }
 
   private readonly logger: Logger;
+
   //private readonly bucketName = process.env.MINIO_BUCKET_NAME;
 
   public getClient() {
@@ -30,18 +36,27 @@ export class MinioClientService {
 
 public async uploadGenerated(file: Buffer, headerRowCount?: string ){
   const timestamp = Date.now().toString();
-  const identifier = Math.random().toString(36).slice(2);
   
   const metaData = {
     'Delemiter' : ',',
     'HeaderRowCount' : HEADER_ROW_COUNT_GEN_LINEAR,
     'Filetype': "Generated linear Dataset",
-    'Filename': "Generated linear Dataset",
+    'Filename': "data",
   };
+
+
+  var buffered:BufferedFile = {
+    fieldname: '',
+    originalname: 'data',
+    encoding: 'utf8',
+    mimetype: 'text/csv',
+    size: file.length,
+    buffer: file
+  }
 
   // We need to append the extension at the end otherwise Minio will save it as a generic file
   try{
-    return this.store(file as any as BufferedFile, metaData);
+    return this.store(buffered, metaData);
   }catch(e){
     console.log("Error: "+e);
   }
@@ -96,7 +111,7 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
         checkIdentifierExists = await this.getClient().bucketExists(identifier);     
       }
       await this.getClient().makeBucket(identifier, "eu-central-1");
-      await this.getClient().putObject(identifier, filename, file.buffer, metaData); 
+      console.log(await this.getClient().putObject(identifier, filename, file.buffer, metaData)); 
       return identifier;
     }catch(e){
       throw e;
@@ -104,10 +119,8 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
 
   }
 
-  public async get(identifier: string, path: string): Promise<LoadedFileMetaData>{
+  public async getData(identifier: string, path: string): Promise<LoadedFileMetaData>{
     try{
-      var datav2 = await this.getClient().listObjectsV2(identifier);
-      var datav1 = await this.getClient().listObjects(identifier);
       var meta  = await this.getClient().statObject(identifier, "data");
       const metaData: LoadedFileMetaData = {
         delemiter: meta.metaData.delemiter,
@@ -132,7 +145,50 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
     }
   }
 
-  public async storeCausalDiscoveryResults(identifier: string, graph:GeneratedGraph, cd_algorithm:String, skeletton_recovery:String):Promise<Boolean>{
+  public async getGraphs(identifier: string): Promise<Array<CDGraph>> {
+    const graphs:Array<CDGraph> = new Array<CDGraph>;
+    const listObject:any = await this.getListObjects(identifier);   
+    for(var i in listObject) {
+      if(listObject[i].name == "data") continue;
+      graphs.push(await this.prepareGraph(identifier, listObject[i].name));
+    }
+    
+    return graphs;
+  }
+
+  private async getListObjects(identifier: string){
+    
+    return new Promise( (resolve, reject) => {
+      var data = [];
+      var stream = this.getClient().listObjects(identifier,'', true);
+      stream.on('data', function(obj) {data.push(obj)})
+      stream.on("end", function () {resolve(data)})
+      stream.on('error', function(err) {console.log(err)})  
+    })
+  }
+
+  private async prepareGraph(identifier: string, name: string): Promise<CDGraph>{
+    return new Promise(async(resolve, reject) => {
+        const object = await this.getClient().getObject(identifier, name);
+        object
+        let buffer:string = "";
+        object.on("data", (chunk:string) => {
+          buffer = buffer +  chunk;
+        });
+        object.on("end", () =>{    
+          var json:LoadedGraph = JSON.parse(buffer);       
+          var graph: CDGraph = {
+            recovery: json.graph.recovery,
+            discovery: json.graph.discovery,
+            edges: json.graph.edges,
+          }
+          console.log("Graph added");
+          resolve(graph);
+          })  
+    })
+  }
+  
+  public async storeCausalDiscoveryResults(identifier: String, graph:GeneratedGraph, cd_algorithm:String, skeletton_recovery:String):Promise<Boolean>{
     
     var buffer:Buffer = Buffer.from(JSON.stringify(graph), "utf-8");
     
@@ -145,16 +201,21 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
     const metaData = {
       'Filetype': "txt",
       'Filename': skeletton_recovery +"_"+cd_algorithm,
+      'recovery': skeletton_recovery,
+      'discovery': cd_algorithm,
     };
 
 
     try{
-      await this.getClient().putObject(identifier, skeletton_recovery +"_"+cd_algorithm, buffer, metaData);
+      await this.getClient().putObject(identifier as string, skeletton_recovery +"_"+cd_algorithm, buffer, metaData);
     }catch(e){
       console.log("Error: "+e);
     }
-
-
     return;
+  }
+
+  public deleteResult(cd_algorithm:String, skeletton_recovery:String, identifier: String){
+    console.log("Delete: "+ skeletton_recovery +"_"+cd_algorithm)
+    this.getClient().removeObject(identifier as string, skeletton_recovery +"_"+cd_algorithm);
   }
 }

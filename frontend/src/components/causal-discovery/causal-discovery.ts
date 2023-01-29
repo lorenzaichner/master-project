@@ -46,7 +46,7 @@ export class Graph {
   features = GlobalState.features;
   // causal model data
 
-  causalDiscoveryAlgorithmsModels = ["ANM", "BivariateFit", "CDS", "IGCI", "RECI", "GES", "GIES", "LiNGAM"];
+  causalDiscoveryAlgorithmsModels = ["ANM", "BivariateFit", "CDS", "IGCI", "RECI", "GES", "GIES", "PC", "LiNGAM"];
   skeletonRecoveryAlgoritms = ["ARD", "DecisionTreeRegression", "Glasso", "LinearSVRL2"];
   causalDiscovery: string;
   recovery: string;
@@ -61,6 +61,8 @@ export class Graph {
   // 1 - edit here (default)
   selectedGraphOption = 1;
   uploadFiles?: FileList;
+
+  identifier: String;
 
   constructor(
     private uploadService: UploadService,
@@ -131,7 +133,7 @@ export class Graph {
       entry = this.causalDiscoveryResults.length - 1;
     }
 
-    await this.graphService.genereateGraph(this.causalDiscovery, this.recovery, GlobalState.dataFileDelimiter);
+    var success = await this.graphService.genereateGraph(this.causalDiscovery, this.recovery, GlobalState.dataFileDelimiter);
 
     for(let i = 0; i < CDT_GRAPH_REQUEST; i++) {
       var result = await this.graphService.checkCausalDiscoveryResults(this.causalDiscovery, this.recovery)  
@@ -177,12 +179,14 @@ export class Graph {
       }
     });
   }
+  
   private deleteGraph(entry: ResultCDAlgorithm){ 
     console.log(entry);
     var index = this.causalDiscoveryResults.findIndex(res => res.causal_discovery === entry.causal_discovery && res.recovery == entry.recovery);
     if(this.causalDiscoveryResults[index].loaded) this.graph.edges(':simple').remove();
     console.log(index);
     this.causalDiscoveryResults.splice(index,1);
+    this.graphService.deleteResult(entry.causal_discovery, entry.recovery);
   }
 
   private loadGraph(entry: ResultCDAlgorithm) {
@@ -250,7 +254,9 @@ export class Graph {
         });
       }
     }
+    console.log(GlobalState.identifier);
     if(CausalDiscoveryState.results != null) this.causalDiscoveryResults = CausalDiscoveryState.results;
+    if(GlobalState.identifier != null) this.identifier = GlobalState.identifier;
     //if(CausalDiscoveryState.causalDiscoveryEdgesId != null) this.causalDiscoveryEdgesId = CausalDiscoveryState.causalDiscoveryEdgesId;
   }
 }

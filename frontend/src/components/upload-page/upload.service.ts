@@ -1,5 +1,7 @@
+import { GlobalState } from './../global.state';
 import {ApiService} from '../api.service';
 import {FileUploadedResponse} from 'common/response/upload/upload.response';
+import {LoadGraphResponse} from 'common/response/minio/miniograph.response';
 import {
   IFileUploadQueryDto,
   IGenerateLinearDatasetDto, IGenerateXYDatasetDto,
@@ -31,7 +33,7 @@ export class UploadService {
     return result.data;
   }
 
-  public async loadStoredFile(identifier: string){ //TODO don pass identifier in URL.
+  public async loadStoredFile(identifier: string){
     const headers = {session: await SessionService.ensureSession()};
     const formData = new FormData();
     formData.append('identifier', identifier);
@@ -40,6 +42,17 @@ export class UploadService {
       headers,
     );
     return result.data;
+  }
+
+  public async loadStoredGraph(identifier: string): Promise<LoadGraphResponse>{
+    const headers = {session: await SessionService.ensureSession()};
+    const formData = new FormData();
+    formData.append('identifier', identifier);
+    const result = await ApiService.get<LoadGraphResponse>(
+      '/upload/graph/' + identifier,
+      headers,
+    );
+    return result;
   }
 
   public async uploadGraph(query: IGraphUploadDto): Promise<void> {

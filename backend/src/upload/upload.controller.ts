@@ -14,6 +14,7 @@ import {ResultsService} from 'src/results/results.service';
 import {Session} from 'src/decorators/session.decorator';
 import {AppError} from 'src/errors/app.error';
 import {Logger} from '../log/logger';
+import { LoadGraphResponse } from 'common/response/minio/miniograph.response';
 
 @Controller('/upload')
 export class UploadController {
@@ -34,7 +35,7 @@ export class UploadController {
         };
     }
 
-    @Get('/file/:identifier') //TODO: CHANGE 
+    @Get('/file/:identifier') //TODO: CHANGE???
     public async loadData(
         @Param('identifier') identifier: string,
         @Session() session: string
@@ -43,6 +44,28 @@ export class UploadController {
             data: await this.uploadService.loadFile(identifier, session),
             success: true
         };
+    }
+
+
+    @Get('/graph/:identifier') //TODO: CHANGE???
+    public async loadGraph(
+        @Param('identifier') identifier: string,
+        @Session() session: string
+        ): Promise<LoadGraphResponse> {
+
+            try{
+                return {
+                    success: true,
+                    data: await this.uploadService.loadGraph(identifier),
+                }
+            }catch(e){
+                return {
+                    success: false,
+                    data: null
+                }
+            }
+
+
     }
 
     @Post('/graph-file')

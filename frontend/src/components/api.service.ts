@@ -44,4 +44,22 @@ export class ApiService {
         .catch(err => reject(err));
     });
   }
+
+  public static async delete<T>(route: string, headers?: Record<string, string>): Promise<T> {
+    const url = `${BASE_URL}${route}`;
+    return new Promise((resolve, reject) => {
+      fetch(url, {
+        method: 'DELETE',
+        headers: headers,
+      })
+        .then(response => response.json())
+        .then(data => {
+          if(data.success != true) {
+            throw new Error(`Request to '${route}' failed with ${JSON.stringify(data, null, 2)}`);
+          }
+          resolve(data);
+        })
+        .catch(err => reject(err));
+    });
+  }
 }

@@ -1,3 +1,5 @@
+import { IDeleteCausalDiscovery } from 'common/dto/graph.generatecd';
+import { ICheckCausalDiscovery } from 'common/dto/graph.generatecd';
 import {Body, Controller, Get, HttpException, HttpStatus, Header, Post, Query, Req, UploadedFile, UseInterceptors, Param} from '@nestjs/common';
 import { SuccessResponse } from 'common/response/basic.response';
 import {CDResponse} from 'common/response/graph/graph.response';
@@ -16,18 +18,21 @@ export class CausalDiscoveryController{
         ):Promise<SuccessResponse>{
             console.log(body);
             console.log(session);
-            this.causalDiscoverySercive.generateGraph(session, body.cd_algorithm, body.recovery_algorithm, body.delimiter);
+            try{
+                this.causalDiscoverySercive.generateGraph(session, body.cd_algorithm, body.recovery_algorithm, body.delimiter);
+            }catch(e){
+                return {success: false};
+            }
+            
             return {success: true};
         }
 
 
-    @Get('check/:cd_algorithm/:recovery_algorithm/:identifier')
+    @Post('/check')
     public async checkForGraph( 
-        @Param("cd_algorithm") cd_algorithm: String,
-        @Param("recovery_algorithm") recovery_algorithm: String,
-        @Param("identifier") identifier:string,
-        @Session("") session: string):Promise<CDResponse> {   
-        const res = await this.causalDiscoverySercive.getGraph(session, cd_algorithm, recovery_algorithm, identifier);
+        @Body() body:ICheckCausalDiscovery,
+        @Session() session: string):Promise<CDResponse> {   
+        const res = await this.causalDiscoverySercive.getGraph(session, body.cd_algorithm, body.recovery_algorithm, body.identifier);
 
         if(res === false) {
             return {
@@ -39,5 +44,15 @@ export class CausalDiscoveryController{
             success: true,
             ...res,
         };    
+    }
+
+    @Post('/delete')
+    public deleteResult( 
+        @Body() body:IDeleteCausalDiscovery,
+        @Session() session: string):Promise<SuccessResponse>{   
+        const res = this.causalDiscoverySercive.getGraph(session, body.cd_algorithm, body.recovery_algorithm, body.identifier);
+        
+        return;
+        
     }
 }
