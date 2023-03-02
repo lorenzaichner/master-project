@@ -51,7 +51,6 @@ export class CausalDiscoveryController{
         @Body() body:IDeleteCausalDiscovery,
         @Session() session: string):Promise<SuccessResponse>{   
         const res = this.causalDiscoverySercive.getGraph(session, body.cd_algorithm, body.recovery_algorithm, body.identifier);
-        
         return;
         
     }

@@ -2,15 +2,8 @@ import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { MinioService } from 'nestjs-minio-client';
 import { BufferedFile, LoadedFileMetaData, LoadedGraph, LoadedGraphMetadata } from './file.model';
 import * as crypto from 'crypto';
-import { dirSync } from 'tmp';
-import { runInThisContext } from 'vm';
-import { Console } from 'console';
 import { GeneratedGraph } from 'common/response/graph/graph.response';
 import { CDGraph} from 'common/response/minio/miniograph.response';
-import { async } from 'rxjs';
-import { BucketItemFromList } from 'minio';
-import { resolve } from 'dns';
-import { rejects, throws } from 'assert';
 
 
 const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/"; //config.get<string>('Upload.StorageDir');
@@ -27,8 +20,6 @@ export class MinioClientService {
   }
 
   private readonly logger: Logger;
-
-  //private readonly bucketName = process.env.MINIO_BUCKET_NAME;
 
   public getClient() {
     return this.minio.client;
@@ -129,9 +120,7 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
         path: path,
         headerRowCount: meta.metaData.headerrowcount,
       };
-        
       const fs = require("fs");
-      
       // read object in chunks and store it as a file
       const fileStream = fs.createWriteStream(metaData.path);
   
@@ -172,6 +161,7 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
         const object = await this.getClient().getObject(identifier, name);
         object
         let buffer:string = "";
+
         object.on("data", (chunk:string) => {
           buffer = buffer +  chunk;
         });
@@ -184,7 +174,10 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
           }
           console.log("Graph added");
           resolve(graph);
-          })  
+          });
+        object.on("error", (error) => {
+          return reject(error); //TODO
+        });
     })
   }
   

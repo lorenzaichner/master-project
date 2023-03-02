@@ -3,7 +3,6 @@ import {ApiService} from '../api.service';
 import {CDResponse} from 'common/response/graph/graph.response';
 import {IDeleteCausalDiscovery, IStartCausalDiscovery} from 'common/dto/graph.generatecd';
 import {ICheckCausalDiscovery} from 'common/dto/graph.generatecd';
-import {StringifiableRecord} from 'query-string';
 import { SuccessResponse } from 'common/response/basic.response';
 import { GlobalState } from '../global.state';
 export class GraphService {
@@ -60,6 +59,4 @@ export class GraphService {
            session: await SessionService.ensureSession()
          },);
     }
-    
-
  }

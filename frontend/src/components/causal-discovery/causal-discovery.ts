@@ -22,10 +22,9 @@ export type SelectedCDAlgortihm = {
 export type ResultCDAlgorithm = {
   recovery:String;
   causal_discovery:String;
-  status: number; //0 = loading, 1 = success, 2 = error
+  status: number;
   graph?: Array<[string, string]>;
   score?: String ;
-  msg?: String;
   loaded?: boolean;
 }
 
@@ -168,11 +167,10 @@ export class Graph {
   }
 
   public addEdge(start: String, dest: String){
-    //this.causalDiscoveryEdgesId.push(`${start}_${dest}`);
     this.graph.add({
       group: 'edges',
       data: {
-        id: `${start}_${dest}`, //TODO make nicer response...
+        id: `${start}_${dest}`, 
         source: start,
         target: dest,
         directed: true
@@ -193,7 +191,6 @@ export class Graph {
     console.log(entry);
     this.graph.edges(':simple').remove();
 
-    //this.causalDiscoveryEdgesId = [];
     for(const edge of entry.graph) {
       this.addEdge(edge[0], edge[1]);
     }   
@@ -206,8 +203,6 @@ export class Graph {
     this.causalDiscoveryResults[index].loaded = true;
 
     CausalDiscoveryState.results = this.causalDiscoveryResults;
-    //CausalDiscoveryState.causalDiscoveryEdgesId = this.causalDiscoveryEdgesId;
-
     
     this.statusLine.setStatus("This Graph can be edited and processed under Graph.");
   }
