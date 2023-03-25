@@ -32,9 +32,6 @@ export interface LoadedFileMetaData {
   headerRowCount: string;
 }
 
-
-
-//{"graph":{"recovery":"ARD","discovery":"IGCI","edges":[["A","B"],["C","D"],["G","F"],["I","J"]]},"error":false,"msg":null}
 export interface LoadedGraph {
   graph: {  recovery: string,
     discovery: string,

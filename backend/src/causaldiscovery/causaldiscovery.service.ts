@@ -1,4 +1,4 @@
-import {Injectable} from '@nestjs/common';
+import {HttpStatus, Injectable, HttpException} from '@nestjs/common';
 import {spawn} from 'child_process';
 import {RedisService} from 'src/redis/redis.service';
 import {Logger} from 'src/log/logger';
@@ -22,12 +22,13 @@ export class CausalDiscoveryService {
       
         const dataFilePath = this.uploadService.getDataFilePath(session)
         const cwd = process.cwd();
-        const pythonProcess = spawn('/usr/bin/python3', [`${cwd}/../cdt/causal_discovery.py`, skeletton_recovery, cd_algorithm, dataFilePath, delimiter])      
-
+        loggerInstance.log('info', `Start generating Graph with params: ${skeletton_recovery} ${cd_algorithm} ${dataFilePath} ${delimiter}`);
+        loggerInstance.log('info', `Pythonscript location: ${cwd}/../dowhy/causal_discovery.py`); 
+        const pythonProcess = spawn('python3', [`${cwd}/../dowhy/causal_discovery.py`, skeletton_recovery, cd_algorithm, dataFilePath, delimiter])      
         pythonProcess.stdout.on('data', async (data) =>{
-            //console.log(new TextDecoder().decode(data))
+            console.log(new TextDecoder().decode(data))
+            loggerInstance.log('info', "On Data: " +  new TextDecoder().decode(data));
             const result = await this.parseGraph(data.toString(), session)
-            console.log(result);
             if (result === false || result == null){
                 return;
             }
@@ -39,6 +40,7 @@ export class CausalDiscoveryService {
 
         pythonProcess.stderr.on('error', (data) => {
             loggerInstance.log('error', 'Error executing script with ${data}')
+            console.log(data)
             
             this.redisService.set(`causald_discovery_error:${session}`, JSON.stringify(data), RESULTS_REDIS_EXPIRE).catch(ex => {
                 loggerInstance.log('error', `storing the error in redis failed with ${ex}`);
@@ -51,6 +53,9 @@ export class CausalDiscoveryService {
 
             } else {
                 loggerInstance.log('error', `Graph generation failed for '${dataFilePath}' (exited with ${code})`);
+                this.redisService.set(`causald_discovery_results_` + skeletton_recovery+`_`+cd_algorithm +`_:${session}`, "ERROR", RESULTS_REDIS_EXPIRE).catch(ex => {
+                    loggerInstance.log('error', `storing the graph in redis failed with ${ex}`);
+                });
             }
         });
         
@@ -70,10 +75,10 @@ export class CausalDiscoveryService {
         if (results == null) {
             return false;
         }
-        if(results == "Error"){
-            //TODO create error responde
+        if(results == "ERROR"){
+            loggerInstance.log('info', `Graph not successfully generated.`);
+            throw new HttpException('Graph not successfully generated.', HttpStatus.BAD_REQUEST);
         }
-        console.log(results);
         var buffer:Graph = await this.parseResponse(results as String);
         var res: GeneratedGraph = {
             graph: buffer,

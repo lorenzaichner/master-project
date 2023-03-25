@@ -35,7 +35,7 @@ export class UploadController {
         };
     }
 
-    @Get('/file/:identifier') //TODO: CHANGE???
+    @Get('/file/:identifier')
     public async loadData(
         @Param('identifier') identifier: string,
         @Session() session: string

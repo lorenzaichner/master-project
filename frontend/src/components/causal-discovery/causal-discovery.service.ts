@@ -32,16 +32,18 @@ export class GraphService {
       } else {
         requestBody = {cd_algorithm, recovery_algorithm, identifier};
       }  
-      const result = await ApiService.post<CDResponse>(
-        '/CausalDiscovery/check',
-        JSON.stringify(requestBody),
-        undefined,
-        {
-          "Content-Type": "application/json",
-           session: await SessionService.ensureSession()
-         },);
+      try{
+        const result = await ApiService.post<CDResponse>(
+          '/CausalDiscovery/check',
+          JSON.stringify(requestBody),
+          undefined,{"Content-Type": "application/json",session: await SessionService.ensureSession()},);
+        return result as SuccessResponse & CDResponse;   
+      } catch (e) {
+        throw e;
+      }
 
-      return result as SuccessResponse & CDResponse;
+
+
     }
     
   //Use Post, beacouse send data in body

@@ -1,29 +1,36 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { MinioService } from 'nestjs-minio-client';
+
+import { ConfigService } from '@nestjs/config';
 import { BufferedFile, LoadedFileMetaData, LoadedGraph, LoadedGraphMetadata } from './file.model';
 import * as crypto from 'crypto';
 import { GeneratedGraph } from 'common/response/graph/graph.response';
 import { CDGraph} from 'common/response/minio/miniograph.response';
+import * as Minio from 'minio'
 
-
-const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/"; //config.get<string>('Upload.StorageDir');
-//const FILE_DIR = config.get<string>('Upload.StorageDir');
-// both at the same dir, at least for now
 
 const HEADER_ROW_COUNT_GEN_LINEAR = 1;
 
 @Injectable()
 export class MinioClientService {
-  constructor(private readonly minio: MinioService) {
+  private minioClient: Minio.Client
+  constructor(private readonly configService: ConfigService) {
     this.logger = new Logger('MinioService');
-    
+    try{
+      this.minioClient = new Minio.Client({
+        endPoint: this.configService.get('MINIO_ENDPOINT'),
+        port: Number(this.configService.get('MINIO_PORT')),
+        useSSL: this.configService.get('MINIO_USE_SSL') === 'true',
+        accessKey: this.configService.get('MINIO_ACCESS_KEY'),
+        secretKey: this.configService.get('MINIO_SECRET_KEY')
+      })
+      this.logger.log("info", "Succesful connected to minio.")
+    } catch (e) {
+      this.logger.error('error', `Connecting to Minio: ` + e);
+    }
+
   }
 
   private readonly logger: Logger;
-
-  public getClient() {
-    return this.minio.client;
-  }
 
 public async uploadGenerated(file: Buffer, headerRowCount?: string ){
   const timestamp = Date.now().toString();
@@ -59,6 +66,7 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
     headerRowCount?: string,
     //bucketName: string = this.bucketName,
   ) {
+    this.logger.log('info', `Start Upload To Minio'`);
     if (!(file.mimetype.includes('csv'))) {
       throw new HttpException(
         'File type not supported',
@@ -86,7 +94,7 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
     try{
       return this.store(file, metaData); 
     }catch(e){
-      console.log("Error: "+e);
+      this.logger.log('Error', `Error uploading to Minio'`);
     }
    
   }
@@ -96,42 +104,55 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
     try{
       let checkIdentifierExists: Boolean = true;
       let identifier: string;
-      
       while(checkIdentifierExists) {
         identifier = Math.random().toString(36).slice(2);
-        checkIdentifierExists = await this.getClient().bucketExists(identifier);     
+        try{
+          checkIdentifierExists = await this.minioClient.bucketExists(identifier); 
+        }catch (e) {
+          this.logger.log('Error', "Error checking identifier:"+ e);
+          throw e;
+        }
       }
-      await this.getClient().makeBucket(identifier, "eu-central-1");
-      console.log(await this.getClient().putObject(identifier, filename, file.buffer, metaData)); 
+      
+      await this.minioClient.makeBucket(identifier, "eu-central-1");
+      await this.minioClient.putObject(identifier, filename, file.buffer, metaData); 
       return identifier;
     }catch(e){
+      this.logger.log('Error', `Error Occured while storing file:` + e);
       throw e;
-    }
-
+      }
   }
 
   public async getData(identifier: string, path: string): Promise<LoadedFileMetaData>{
-    try{
-      var meta  = await this.getClient().statObject(identifier, "data");
-      const metaData: LoadedFileMetaData = {
-        delemiter: meta.metaData.delemiter,
-        filename: meta.metaData.filename,
-        filetype: meta.metaData.filetype,
-        path: path,
-        headerRowCount: meta.metaData.headerrowcount,
-      };
-      const fs = require("fs");
-      // read object in chunks and store it as a file
-      const fileStream = fs.createWriteStream(metaData.path);
-  
-      const object = await this.getClient().getObject(identifier, "data");
-      object.on("data", (chunk) => fileStream.write(chunk));
-      
-      object.on("end", () => console.log("Finished writing"));        
-      return metaData;  
-    }catch(e){
-      console.log("Error loading file");
-    }
+    return new Promise(async(resolve, reject) => {
+      try{
+        var meta  = await this.minioClient.statObject(identifier, "data");
+        this.logger.log("Get Object with metadata: " + meta.metaData);
+        const metaData: LoadedFileMetaData = {
+          delemiter: meta.metaData.delemiter,
+          filename: meta.metaData.filename,
+          filetype: meta.metaData.filetype,
+          path: path,
+          headerRowCount: meta.metaData.headerrowcount,
+        };
+        const fs = require("fs");
+        const fileStream = fs.createWriteStream(metaData.path);
+        const object = await this.minioClient.getObject(identifier, "data");
+        object.on("data", (chunk) => fileStream.write(chunk));
+        object.on("end", () =>{
+          this.logger.log("Finished downloading Data.");
+          resolve(metaData);
+        });   
+        object.on("error", (err) => {
+          this.logger.log("Error downloading Data.");
+          reject(err);
+        });      
+        return metaData;  
+      }catch(e){
+        this.logger.log("Error downloading Data.")
+        throw e;
+      }
+  })
   }
 
   public async getGraphs(identifier: string): Promise<Array<CDGraph>> {
@@ -141,24 +162,24 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
       if(listObject[i].name == "data") continue;
       graphs.push(await this.prepareGraph(identifier, listObject[i].name));
     }
-    
     return graphs;
   }
 
   private async getListObjects(identifier: string){
-    
     return new Promise( (resolve, reject) => {
       var data = [];
-      var stream = this.getClient().listObjects(identifier,'', true);
+      var stream = this.minioClient.listObjects(identifier,'', true);
       stream.on('data', function(obj) {data.push(obj)})
       stream.on("end", function () {resolve(data)})
-      stream.on('error', function(err) {console.log(err)})  
+      stream.on('error', function(err) {
+        this.logger.log("Finished downloading Data.");
+        throw err})  
     })
   }
 
   private async prepareGraph(identifier: string, name: string): Promise<CDGraph>{
     return new Promise(async(resolve, reject) => {
-        const object = await this.getClient().getObject(identifier, name);
+        const object = await this.minioClient.getObject(identifier, name);
         object
         let buffer:string = "";
 
@@ -200,7 +221,7 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
 
 
     try{
-      await this.getClient().putObject(identifier as string, skeletton_recovery +"_"+cd_algorithm, buffer, metaData);
+      await this.minioClient.putObject(identifier as string, skeletton_recovery +"_"+cd_algorithm, buffer, metaData);
     }catch(e){
       console.log("Error: "+e);
     }
@@ -209,6 +230,6 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
 
   public deleteResult(cd_algorithm:String, skeletton_recovery:String, identifier: String){
     console.log("Delete: "+ skeletton_recovery +"_"+cd_algorithm)
-    this.getClient().removeObject(identifier as string, skeletton_recovery +"_"+cd_algorithm);
+    this.minioClient.removeObject(identifier as string, skeletton_recovery +"_"+cd_algorithm);
   }
 }

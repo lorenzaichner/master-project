@@ -1,16 +1,16 @@
-version: "3.7"
+version: "3.8"
 services:
   minio:
-    image: minio/minio
-    ports:
-      - "9000:9000"
-    volumes:
-      - ./storage/minio:/data
+    image: docker.io/bitnami/minio:2022
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server --address 0.0.0.0:9000 /data
-      
+      MINIO_ROOT_USER: miniouser
+      MINIO_ROOT_PASSWORD: miniopassword
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - 'minio_data:/data'
+
   redis:
     container_name: cdi_redis
     image: "redis:alpine"
@@ -23,9 +23,11 @@ services:
       context: ./
       dockerfile: ./backend/Dockerfile
     command: npm run start
-    image: jovan_bakk/cdi_backend
+    image: lorenz_aichner_bakk/cdi_backend
     depends_on:
       - redis
+      #- minio
+ 
     ports:
       - "3000:3000"
         # volumes:
@@ -37,15 +39,17 @@ services:
       context: ./
       dockerfile: ./frontend/Dockerfile
     command: http-server dist
-    image: jovan_bakk/cdi_frontend
+    image: lorenz_aichner_bakk/cdi_frontend
     ports:
       - "8080:8080"
     volumes:
-      - /usr/src/app/node_modules
+      - /usr/src/app/node_modules/home/lorenz/Documents/Bachelor/master-project/backend/src/app.service.ts
+      
+      
+volumes:
+  minio_data:
+    driver: local
 
-  
-    #sudo docker run -p 9000:9000 minio/minio server /data
-    
     
     
 

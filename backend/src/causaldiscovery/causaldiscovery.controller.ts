@@ -32,7 +32,13 @@ export class CausalDiscoveryController{
     public async checkForGraph( 
         @Body() body:ICheckCausalDiscovery,
         @Session() session: string):Promise<CDResponse> {   
-        const res = await this.causalDiscoverySercive.getGraph(session, body.cd_algorithm, body.recovery_algorithm, body.identifier);
+        var res;
+        try {
+            res = await this.causalDiscoverySercive.getGraph(session, body.cd_algorithm, body.recovery_algorithm, body.identifier);
+        } catch (e: any) {
+            throw e;
+        }
+        
 
         if(res === false) {
             return {

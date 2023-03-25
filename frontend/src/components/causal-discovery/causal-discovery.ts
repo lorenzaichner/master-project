@@ -132,23 +132,26 @@ export class Graph {
       entry = this.causalDiscoveryResults.length - 1;
     }
 
-    var success = await this.graphService.genereateGraph(this.causalDiscovery, this.recovery, GlobalState.dataFileDelimiter);
+    this.graphService.genereateGraph(this.causalDiscovery, this.recovery, GlobalState.dataFileDelimiter);
 
     for(let i = 0; i < CDT_GRAPH_REQUEST; i++) {
-      var result = await this.graphService.checkCausalDiscoveryResults(this.causalDiscovery, this.recovery)  
+      try{
+        var result = await this.graphService.checkCausalDiscoveryResults(this.causalDiscovery, this.recovery)  
+      } catch (e) {
+        this.statusLine.setError("Error while generating graph.");
+        this.causalDiscoveryResults[entry].status = 2;
+        this.loading = false;  
+        return;
+      }
+      
       if (!((result as (SuccessResponse & { available: false })).available === false)) {
         break;
       }
       await this.waitMs(CDT_WAIT_MS_REQUEST);
     }
 
-    if((result as (SuccessResponse & GeneratedGraph)).error) {
-      //TODO ERROR MESSAGE.
-      this.causalDiscoveryResults[entry].status = 2;
-    }
-    else {
-      this.addGraph((result as (SuccessResponse & GeneratedGraph)), entry);
-    }
+    this.addGraph((result as (SuccessResponse & GeneratedGraph)), entry);
+    
     this.selectedGraphOption = 2
     this.loading = false;  
     return;

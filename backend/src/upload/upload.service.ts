@@ -23,8 +23,9 @@ import { request } from 'http';
 import { CDGraph, LoadGraphResponse } from 'common/response/minio/miniograph.response';
 import { isBoolean } from 'class-validator';
 
-const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/backend"; //config.get<string>('Upload.StorageDir');
-//const FILE_DIR = config.get<string>('Upload.StorageDir');
+
+//const FILE_DIR = "/home/lorenz/Documents/Bachelor/master-project/backend"; 
+const FILE_DIR = config.get<string>('Upload.StorageDir');
 // both at the same dir, at least for now
 const DATA_FILES_DIR = FILE_DIR;
 const GRAPH_FILES_DIR = FILE_DIR;
@@ -69,6 +70,7 @@ export class UploadService {
         const dataFilePath = this.getDataFilePath(session);
         console.log(dataFilePath)
         try {
+            Logger.getInstance().log('info', `Storing file in path: ${dataFilePath}`);
             await fs.writeFile(dataFilePath, file);
         } catch (err) {
             const errMessage = `could not save the data file which was uploaded by the user (process.cwd is '${process.cwd()}', data file path is '${dataFilePath}')`;
@@ -79,6 +81,7 @@ export class UploadService {
     public async saveGraphFile(session: string, file: Buffer): Promise<void> {
         const graphFilePath = this.getGraphFilePath(session);
         try {
+            
             await fs.writeFile(graphFilePath, file);
         } catch (err) {
             throw AppError.fromName('GRAPH_FILE_SAVE_FAIL', [err]);
