@@ -4,20 +4,32 @@
     <div class="container-fluid ">
         <div class="m-3 p-3 bg bg-light border border-primary">
           <p class="font-weight-bold">Generate directed Graph with:</p>
-          <div class="col mb-3">
-            Algorithm for skeletton recovery: 
-            <select disabled.bind="loading" id="recovery" value.bind="recovery" bootstrap-select>
-              <option model.bind="null">Skeleton Recovery Algorithm...</option>
-              <option repeat.for="model of skeletonRecoveryAlgoritms" model.bind="model">${model}</option>
-            </select>
+          <div class="row"> 
+            <div class="col-4">            
+              Algorithm for skeletton recovery: 
+              <select disabled.bind="loading" id="recovery" value.bind="recovery" bootstrap-select>
+                <option model.bind="null">Skeleton Recovery Algorithm...</option>
+                <option repeat.for="model of skeletonRecoveryAlgoritms" model.bind="model">${model}</option>
+              </select>
+            </div>
+            <div class="col-8" value.bind="skelettonRecoveryyDescription">
+              <p class="text-left" textcontent.bind="selectedAlgorithmDescription"></p>
+            </div>
           </div>
-          <div class="col mb-3">
-            Algoithm to direct graph:
-            <select disabled.bind="loading" id="causalDiscovery" value.bind="causalDiscovery" bootstrap-select>
-              <option model.bind="null">Causal Discovery Algorithm..</option>
-              <option repeat.for="model of causalDiscoveryAlgorithmsModels" model.bind="model">${model}</option>
-            </select>
+          <br>
+          <div class="row"> 
+            <div class="col-4">            
+              Algoithm to direct graph:
+              <select disabled.bind="loading" id="causalDiscovery" value.bind="causalDiscovery" bootstrap-select>
+                <option model.bind="null">Causal Discovery Algorithm..</option>
+                <option repeat.for="model of causalDiscoveryAlgorithmsModels" model.bind="model">${model}</option>
+              </select>
+            </div>
+            <div class="col-8" value.bind="causalDiscoveryDescription">
+              <p class="text-left" textcontent.bind="selectedCausalDiscoveryDescription"></p>
+            </div>
           </div>
+          <br>
           <div class="row" style="width: 20%;">
             <div class="col-4">
               <button disabled.bind="loading" type="submit" class="btn btn-primary" click.trigger="processCausalDiscovery()">Generate</button>

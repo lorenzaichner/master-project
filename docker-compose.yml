@@ -18,7 +18,7 @@ services:
       - "6379:6379"
 
   backend:
-    container_name: cdi_backend
+    container_name: cdi_backendls
     build:
       context: ./
       dockerfile: ./backend/Dockerfile
@@ -26,12 +26,9 @@ services:
     image: lorenz_aichner_bakk/cdi_backend
     depends_on:
       - redis
-      #- minio
- 
     ports:
       - "3000:3000"
-        # volumes:
-        # - /usr/src/app/backend/node_modules
+
 
   frontend:
     container_name: cdi_frontend
