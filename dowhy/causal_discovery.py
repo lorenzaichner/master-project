@@ -2,13 +2,9 @@
 
 import csv
 import sys
-print("TestONE")
 import pandas as pd
-print("TestTwo")
 import networkx as nx
-print("TestThree")
 import cdt
-print("TestFour")
 # Algorithm for ugraph recovery.
 from cdt.independence.graph import ARD
 from cdt.independence.graph import DecisionTreeRegression
@@ -43,7 +39,6 @@ from cdt.causality.graph import LiNGAM
 from cdt.causality.graph import PC
 from cdt.causality.graph import SAM
 from cdt.causality.graph import SAMv1
-print("Everything succesful imported.")
 
 # cdt logging setup
 
@@ -97,7 +92,8 @@ def testCausalDiscovery(data, ugraph, causal_discovery, skelteon_recovery, graph
     return graphs
 
 if __name__ == '__main__':
-    print("Test")
+    cdt.SETTINGS.GPU = True
+    cdt.SETTINGS.NJOBS = 3
     #causal_discovery_logfile = open('logs/estimation_fails.log', 'w')
     #causal_discovery_logfile.write('---- Discovery method info (' + "Start" + ') ---\n\n\n')
     #causal_discovery_logfile.close()
