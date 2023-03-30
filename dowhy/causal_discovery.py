@@ -15,30 +15,17 @@ from cdt.independence.graph import LinearSVRL2
 from cdt.causality.pairwise import ANM
 from cdt.causality.pairwise import BivariateFit
 from cdt.causality.pairwise import CDS
-from cdt.causality.pairwise import GNN
 from cdt.causality.pairwise import IGCI
-from cdt.causality.pairwise import Jarfo
-from cdt.causality.pairwise import NCC
-from cdt.causality.pairwise import RCC
 from cdt.causality.pairwise import RECI
 
-# Graph based Causality Algorithms (bnleanr)
-from cdt.causality.graph import GS
-from cdt.causality.graph import IAMB
-from cdt.causality.graph import Fast_IAMB
-from cdt.causality.graph import Inter_IAMB
-from cdt.causality.graph import MMPC
+
 
 # Graph based Causality Algorithms
-from cdt.causality.graph import CAM
-from cdt.causality.graph import CCDr
-from cdt.causality.graph import CGNN
 from cdt.causality.graph import GES
 from cdt.causality.graph import GIES
 from cdt.causality.graph import LiNGAM
 from cdt.causality.graph import PC
-from cdt.causality.graph import SAM
-from cdt.causality.graph import SAMv1
+
 
 # cdt logging setup
 
@@ -55,7 +42,7 @@ def recoverSkeletton(data, graph_recovery):
         return "Error: Skeletton Recovery Algorithm failed."
 
 
-def processCausalDiscovery(data, ugraph, alg):
+def processCausalDiscovery(data, ugraph, alg, continious, descrete, useUndirectedGraph):
     if (alg == "ANM"):
         return ANM().orient_graph(data, nx.DiGraph(ugraph))
     elif (alg == "BivariateFit"):
@@ -67,14 +54,27 @@ def processCausalDiscovery(data, ugraph, alg):
     elif (alg == "RECI"):
         return RECI().orient_graph(data, nx.Graph(ugraph))
     elif (alg == "GES"):
-        return GES().predict(data, nx.Graph(ugraph))
+        if (continious):
+            ges_algorithm = GES(score='obs')
+            return ges_algorithm.predict(data, nx.Graph(ugraph))
+        if (descrete):
+            ges_algorithm = GES(score='int')
+            return ges_algorithm.predict(data, nx.Graph(ugraph))
     elif (alg == "GIES"):
-        return GIES().predict(data, nx.Graph(ugraph))
+        if(continious):
+            gies_algorithm = GIES(score='obs')
+            return gies_algorithm.predict(data, nx.Graph(ugraph))
+        if(descrete):
+            gies_algorithm = GIES( score='int')
+            return gies_algorithm.predict(data, nx.Graph(ugraph))
     elif (alg == "LiNGAM"):
         return LiNGAM().predict(data)
     elif (alg == "PC"):
-        return PC().predict(data, nx.Graph(ugraph))
-        
+        pc_algorithm = PC()
+        if(useUndirectedGraph):
+            return pc_algorithm.predict(data, nx.Graph(ugraph))
+        else:
+            return pc_algorithm.predict(data)
 
 def testSkeletonRecovery(data, graph_recovery, causal_discovery):
     graphs = {}
@@ -91,26 +91,16 @@ def testCausalDiscovery(data, ugraph, causal_discovery, skelteon_recovery, graph
         graphs[skelteon_recovery + "_" + alg] = output
     return graphs
 
+
 if __name__ == '__main__':
     cdt.SETTINGS.GPU = True
     cdt.SETTINGS.NJOBS = 3
-    #causal_discovery_logfile = open('logs/estimation_fails.log', 'w')
-    #causal_discovery_logfile.write('---- Discovery method info (' + "Start" + ') ---\n\n\n')
-    #causal_discovery_logfile.close()
-    
+
     path = sys.argv[3]
     delimiter = sys.argv[4]
 
-    # Currently implemented: "ARD", "DecisionTreeRegression", "Glasso", "LinearSVRL2"
-    # Missing: "FSGNN", "HSICLasso"
     graph_recovery = [sys.argv[1]]
 
-    # Currently implemented: "ANM", "BivariateFit", "CDS", "IGCI", "RECI", "GES", "GIES", "LiNGAM"
-    # Missing:
-    # Outsorted because takes too long: "GNN", "CGNN"
-    # Outsorted beacause train set: "Jarfo", "NCC", "RCC",
-    # Outsorted because of R error: "GS","IAMB", "Fast_IAMB", "Inter_IAMB","MMPC", "CAM","CCDr", "PC"
-    # other error: "SAM", "SAMv1"
     causal_discovery = [sys.argv[2]]
     data = pd.read_csv(path, sep=delimiter)
     graphs = testSkeletonRecovery(data, graph_recovery, causal_discovery)

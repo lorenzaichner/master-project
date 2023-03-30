@@ -1,3 +1,4 @@
+import { bootstrap } from 'aurelia-bootstrapper';
 import cytoscape from 'cytoscape';
 import {inject} from 'aurelia-framework';
 import {StatusLine} from '../status/status.line';
@@ -26,6 +27,12 @@ export type ResultCDAlgorithm = {
   graph?: Array<[string, string]>;
   score?: String ;
   loaded?: boolean;
+}
+
+export type AlgorithmParameter = {
+  continious?: boolean;
+  descrete?:boolean;
+  createUndirectGraph?:boolean;
 }
 
 @inject(UploadService, ResultsPage, GraphService)
@@ -57,18 +64,19 @@ export class Graph {
 
 
   causalDiscoveryDescription = new Map([
-    ["ANM", "1"],
-    ["BivariateFit", "2"],
-    ["CDS", "3"],
-    ["IGCI", "4"],
-    ["RECI", "5"],
-    ["GES", "6"],
-    ["GIES", "7"],
-    ["PC", "8"],
-    ["LiNGAM", "9"]
+    ["ANM", "Approaches for pairwise causality. Only Works for continious datatypes."],
+    ["BivariateFit", "The bivariate fit model is based onon a best-fit criterion relying on a Gaussian Process regressor. Used as weak baseline. Only Works for continious datatypes."],
+    ["CDS", "Conditional Distribution Similarity measures the standart derivation for y in respect to x and vice versa. The lower the std. the more likely the pair to be x->y (resp. y->x). Works for Continuous and Discrete."],
+    ["IGCI", "Information Geometric Causal Inference algorithm is a pairwise causal discovery approach for continuous data. It works best when the noise in the data is minimal and the functions that relate the variables are invertible."],
+    ["RECI", "Regression Error based Causal Inference relies on a best-fit mse with monome regressor and [0,1] rescaling to infer causal direction. Only Works for continious datatypes."],
+    ["GES", "Greedy Equivalence Search algorithm. A score-based Bayesian algorithm that searches heuristically the graph which minimizes a likelihood score on the data. Works for Continuous or Categorical."],
+    ["GIES", "Greedy Interventional Equivalence Search algorithm. The main difference with GES is that it accepts interventional data for its inference. Works for Continuous or Categorical."],
+    ["PC", "Based on conditional tests on variables and sets of variables, it proved itself to be really efficient. Consider graphs < 200 variables. Works for continuous and discrete datasets"],
+    ["LiNGAM", "Linear Non-Gaussian Acyclic model. The underlying causal model is supposed to be composed of linear mechanisms and non-gaussian data. Works for Continuous data types."]
     ]);
 
-
+  
+  
 
 
   causalDiscovery: string;
