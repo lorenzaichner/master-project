@@ -12,7 +12,7 @@ import { GeneratedGraph } from 'common/response/graph/graph.response';
 import { CausalDiscoveryState } from './causal-discovery.state';
 
 
-const CDT_GRAPH_REQUEST = 60;
+const CDT_GRAPH_REQUEST = 600000;
 const CDT_WAIT_MS_REQUEST = 5000;
 
 
@@ -74,10 +74,12 @@ export class Graph {
     ["PC", "Based on conditional tests on variables and sets of variables, it proved itself to be really efficient. Consider graphs < 200 variables. Works for continuous and discrete datasets"],
     ["LiNGAM", "Linear Non-Gaussian Acyclic model. The underlying causal model is supposed to be composed of linear mechanisms and non-gaussian data. Works for Continuous data types."]
     ]);
-
   
-  
+  datatypes = ["Continious", "Categorical"];
 
+  datatype: string = "";
+
+  useGraph: boolean = false;
 
   causalDiscovery: string;
   recovery: string;
@@ -131,12 +133,25 @@ export class Graph {
   }
 
   private async processCausalDiscovery(){
-    
-    if(this.causalDiscovery == null || this.recovery == null )
-    {
+    for(var i = 0; i < this.skeletonRecoveryAlgoritms.length; i++){
+      for(var y = 0; y < this.causalDiscoveryAlgorithmsModels.length; y++) {
+        if(this.causalDiscoveryAlgorithmsModels[y] == "GES" || this.causalDiscoveryAlgorithmsModels[y] == "GIES") this.datatype = this.datatypes[0];
+        if(this.causalDiscoveryAlgorithmsModels[y] == "PC") this.useGraph = true;
+        this.causalDiscovery = this.causalDiscoveryAlgorithmsModels[y];
+        this.recovery = this.skeletonRecoveryAlgoritms[y];
+        await this.test();
+      }
+    }
+  }
+
+  private async test(){
+
+   console.log("DATATYPE: "+this.datatype);
+
+   if(this.causalDiscovery == null || this.recovery == null && !this.useGraph) {
       this.statusLine.setError("Please choose both algorithms.")
       return;
-    }
+    } 
     
     if (this.graph == null) {
       this.statusLine.setError('No data found.');
@@ -147,6 +162,9 @@ export class Graph {
       this.statusLine.setError('No data found.');
       return;
     }
+
+    if(this.useGraph && this.causalDiscovery == 'PC') this.recovery = "NONE";
+
     this.loading = true;    
     
     var dublicate:boolean = false; 
@@ -160,19 +178,19 @@ export class Graph {
       }
     }
 
+
     if(!dublicate) {
       const data: ResultCDAlgorithm = {
         recovery: this.recovery,
         causal_discovery: this.causalDiscovery,
         status: 0,
-  
       }   
-  
       this.causalDiscoveryResults.push(data);
       entry = this.causalDiscoveryResults.length - 1;
     }
 
-    this.graphService.genereateGraph(this.causalDiscovery, this.recovery, GlobalState.dataFileDelimiter);
+
+    this.graphService.genereateGraph(this.causalDiscovery, this.recovery, GlobalState.dataFileDelimiter, this.datatype, this.useGraph);
 
     for(let i = 0; i < CDT_GRAPH_REQUEST; i++) {
       try{

@@ -7,10 +7,10 @@ import { SuccessResponse } from 'common/response/basic.response';
 import { GlobalState } from '../global.state';
 export class GraphService {
   
-    public async genereateGraph(cd_algorithm: string, recovery_algorithm: string, delimiter?: string){
+    public async genereateGraph(cd_algorithm: string, recovery_algorithm: string, delimiter?: string, dataType?: string, useGraph?: boolean){
         const headers = {session: await SessionService.ensureSession()};
-        const requestBody: IStartCausalDiscovery = {delimiter, cd_algorithm, recovery_algorithm};
-                
+        const requestBody: IStartCausalDiscovery = {delimiter, cd_algorithm, recovery_algorithm, dataType, useGraph};
+        console.log(requestBody);
         const result = await ApiService.post<SuccessResponse>(
         '/CausalDiscovery/generate',
         JSON.stringify(requestBody),

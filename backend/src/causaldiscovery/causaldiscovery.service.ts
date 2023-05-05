@@ -17,14 +17,14 @@ export class CausalDiscoveryService {
     constructor(private uploadService: UploadService, private readonly redisService: RedisService, private minioClientService: MinioClientService) {
     }
 
-    public async generateGraph(session: string, cd_algorithm:string, skeletton_recovery, delimiter:string)
-    {   
-      
+    public async generateGraph(session: string, cd_algorithm:string, skeletton_recovery, delimiter :string, dataType?: string, useGraph?: boolean)
+    {       
         const dataFilePath = this.uploadService.getDataFilePath(session)
         const cwd = process.cwd();
-        loggerInstance.log('info', `Start generating Graph with params: ${skeletton_recovery} ${cd_algorithm} ${dataFilePath} ${delimiter}`);
+        loggerInstance.log('info', `Start generating Graph with params: ${skeletton_recovery} ${cd_algorithm} ${dataFilePath} ${delimiter} ${dataType} ${useGraph}`);
         loggerInstance.log('info', `Pythonscript location: ${cwd}/../dowhy/causal_discovery.py`); 
-        const pythonProcess = spawn('python3', [`${cwd}/../dowhy/causal_discovery.py`, skeletton_recovery, cd_algorithm, dataFilePath, delimiter])      
+        const pythonProcess = spawn('python3', [`${cwd}/../dowhy/causal_discovery.py`, skeletton_recovery, cd_algorithm, dataFilePath, delimiter, dataType, useGraph])      
+        
         pythonProcess.stdout.on('data', async (data) =>{
             console.log(new TextDecoder().decode(data))
             loggerInstance.log('info', "On Data: " +  new TextDecoder().decode(data));
@@ -71,8 +71,9 @@ export class CausalDiscoveryService {
     }
 
     public async getGraph(session:String, cd_algorithm:String, skeletton_recovery:String, identifier?: String):Promise<GeneratedGraph|false>{
-        const results = await this.redisService.get(`causald_discovery_results_` + skeletton_recovery+`_`+cd_algorithm +`_:${session}`); //TODO save in store function also cd algo + skeleton recovery algo
+        const results = await this.redisService.get(`causald_discovery_results_` + skeletton_recovery+`_`+cd_algorithm +`_:${session}`); 
         if (results == null) {
+            loggerInstance.log('info', `Graph not generated yet.`);
             return false;
         }
         if(results == "ERROR"){
@@ -89,12 +90,13 @@ export class CausalDiscoveryService {
         if(identifier != null){
             await this.minioClientService.storeCausalDiscoveryResults(identifier, res, cd_algorithm, skeletton_recovery);
         }
+        await this.redisService.del(`causald_discovery_results_` + skeletton_recovery+`_`+cd_algorithm +`_:${session}`); 
         return res;
     }
     
     public async parseResponse(result: String):Promise<Graph>{
-        
-        var temp:String = result.split('\'')[1]
+        loggerInstance.log('info', `RESULT: `+result);
+        var temp:String = result.split('\n')[1];
         var algorithm_used: String[] = temp.split('_');
         
         const recovery:String = algorithm_used[0];

@@ -78,6 +78,7 @@ def processCausalDiscovery(data, ugraph, alg, dataType, useGraph):
 def testSkeletonRecovery(data, graph_recovery, causal_discovery, dataType, useGraph):
     graphs = {}
     for alg in graph_recovery:
+        print('2')
         ugraph = ""
         if not useGraph:
             ugraph = recoverSkeletton(data, alg)

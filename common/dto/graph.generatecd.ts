@@ -2,6 +2,8 @@ export interface IStartCausalDiscovery {
     delimiter: string;
     cd_algorithm: string;
     recovery_algorithm: string;
+    dataType?: string;
+     useGraph?: boolean;
 }
 
 export interface ICheckCausalDiscovery {

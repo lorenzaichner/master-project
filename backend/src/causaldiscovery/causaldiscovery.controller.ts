@@ -1,6 +1,6 @@
 import { IDeleteCausalDiscovery } from 'common/dto/graph.generatecd';
 import { ICheckCausalDiscovery } from 'common/dto/graph.generatecd';
-import {Body, Controller, Get, HttpException, HttpStatus, Header, Post, Query, Req, UploadedFile, UseInterceptors, Param} from '@nestjs/common';
+import {Body, Controller, Post} from '@nestjs/common';
 import { SuccessResponse } from 'common/response/basic.response';
 import {CDResponse} from 'common/response/graph/graph.response';
 import {Session} from 'src/decorators/session.decorator';
@@ -17,9 +17,8 @@ export class CausalDiscoveryController{
         @Session() session: string,
         ):Promise<SuccessResponse>{
             console.log(body);
-            console.log(session);
             try{
-                this.causalDiscoverySercive.generateGraph(session, body.cd_algorithm, body.recovery_algorithm, body.delimiter);
+                this.causalDiscoverySercive.generateGraph(session, body.cd_algorithm, body.recovery_algorithm, body.delimiter, body.dataType, body.useGraph);
             }catch(e){
                 return {success: false};
             }

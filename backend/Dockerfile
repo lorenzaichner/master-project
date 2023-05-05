@@ -1,11 +1,12 @@
 
 #Set up the nvidia-docker image for the causal discovery toolbox
-#FROM divkal/nv-cdt-py3.6
+#FROM divkal/nv-cdt-py3.7
 FROM divkal/cdt-py3.7
 
 WORKDIR /usr/src/app/dowhy
 RUN apt-get update
 RUN apt-get install -y python3-pip 
+RUN pip3 install --upgrade pip setuptools
 RUN pip3 install dowhy
 RUN pip3 install econml
 
