@@ -23,7 +23,7 @@ export class MinioClientService {
         accessKey: this.configService.get('MINIO_ACCESS_KEY'),
         secretKey: this.configService.get('MINIO_SECRET_KEY')
       })
-      this.logger.log("info", "Succesful connected to minio.")
+      this.logger.log("info", "Succesful connected to minio.");
     } catch (e) {
       this.logger.error('error', `Connecting to Minio: ` + e);
     }
@@ -179,18 +179,20 @@ public async uploadGenerated(file: Buffer, headerRowCount?: string ){
 
   private async prepareGraph(identifier: string, name: string): Promise<CDGraph>{
     return new Promise(async(resolve, reject) => {
+        var meta  = await this.minioClient.statObject(identifier, name);
         const object = await this.minioClient.getObject(identifier, name);
-        object
         let buffer:string = "";
 
         object.on("data", (chunk:string) => {
           buffer = buffer +  chunk;
         });
         object.on("end", () =>{    
-          var json:LoadedGraph = JSON.parse(buffer);       
+          var json:LoadedGraph = JSON.parse(buffer);     
+          
+          this.logger.log("info", json);  
           var graph: CDGraph = {
-            recovery: json.graph.recovery,
-            discovery: json.graph.discovery,
+            recovery: meta.metaData.recovery,
+            discovery: meta.metaData.discovery,
             edges: json.graph.edges,
           }
           console.log("Graph added");

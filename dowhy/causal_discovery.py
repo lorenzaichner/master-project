@@ -113,6 +113,7 @@ if __name__ == '__main__':
 
     data = pd.read_csv(path, sep=delimiter)
     graphs = testSkeletonRecovery(data, graph_recovery, causal_discovery, dataType, useGraph)
+    print(graphs)
     ##pares Result
     result = "__RESULT__\n"
     for entry in graphs:

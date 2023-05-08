@@ -138,7 +138,7 @@ export class Graph {
         if(this.causalDiscoveryAlgorithmsModels[y] == "GES" || this.causalDiscoveryAlgorithmsModels[y] == "GIES") this.datatype = this.datatypes[0];
         if(this.causalDiscoveryAlgorithmsModels[y] == "PC") this.useGraph = true;
         this.causalDiscovery = this.causalDiscoveryAlgorithmsModels[y];
-        this.recovery = this.skeletonRecoveryAlgoritms[y];
+        this.recovery = this.skeletonRecoveryAlgoritms[i];
         await this.test();
       }
     }
@@ -217,10 +217,9 @@ export class Graph {
 
   private async addGraph(graph: GeneratedGraph, entry: any) {
     console.log(graph);
-    
     this.causalDiscoveryResults[entry].graph = graph.graph.edges;
-    this.causalDiscoveryResults[entry].recovery = graph.graph.recovery;
-    this.causalDiscoveryResults[entry].causal_discovery = graph.graph.discovery;
+    this.causalDiscoveryResults[entry].recovery = this.recovery;
+    this.causalDiscoveryResults[entry].causal_discovery = this.causalDiscovery;
     this.causalDiscoveryResults[entry].status = 1;
     GraphState.causalDiscoveryResults = this.causalDiscoveryResults;
     CausalDiscoveryState.results = this.causalDiscoveryResults;

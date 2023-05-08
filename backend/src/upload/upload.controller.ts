@@ -47,7 +47,7 @@ export class UploadController {
     }
 
 
-    @Get('/graph/:identifier') //TODO: CHANGE???
+    @Get('/graph/:identifier') 
     public async loadGraph(
         @Param('identifier') identifier: string,
         @Session() session: string
