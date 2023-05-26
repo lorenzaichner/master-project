@@ -34,7 +34,7 @@
             <div class="col-sm">
               <button disabled.bind="loading" type="submit" class="btn btn-primary" click.trigger="processCausalDiscovery()">Generate</button>
             </div>
-            <div class="col-sm" if.bind="causalDiscovery == 'PC'">
+            <div class="col-sm" if.bind="causalDiscovery == 'PC' || causalDiscovery == 'CGNN">
               <label><input type="checkbox" checked.bind="useGraph">  Use Graph directly created by PC algorithm!</label>
             </div>
             <div class="col-sm" if.bind="causalDiscovery == 'GES' || causalDiscovery == 'GIES' ">
