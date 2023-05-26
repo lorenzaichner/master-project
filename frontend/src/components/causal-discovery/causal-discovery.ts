@@ -132,7 +132,7 @@ export class Graph {
     this.recovery;
   }
 
-  private async processCausalDiscovery(){
+  private async test(){
     for(var i = 0; i < this.skeletonRecoveryAlgoritms.length; i++){
       for(var y = 0; y < this.causalDiscoveryAlgorithmsModels.length; y++) {
         if(this.causalDiscoveryAlgorithmsModels[y] == "GES" || this.causalDiscoveryAlgorithmsModels[y] == "GIES") this.datatype = this.datatypes[0];
@@ -144,7 +144,7 @@ export class Graph {
     }
   }
 
-  private async test(){
+  private async processCausalDiscovery(){
 
    console.log("DATATYPE: "+this.datatype);
 
