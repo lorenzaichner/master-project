@@ -52,7 +52,7 @@ export class Graph {
   features = GlobalState.features;
   // causal model data
 
-  causalDiscoveryAlgorithmsModels = ["ANM", "BivariateFit", "CDS", "IGCI", "RECI", "GES", "GIES", "PC", "LiNGAM"];
+  causalDiscoveryAlgorithmsModels = ["ANM", "BivariateFit", "CDS", "IGCI", "RECI", "GES", "GIES", "PC", "LiNGAM", "CGNN"];
   skeletonRecoveryAlgoritms = ["ARD", "DecisionTreeRegression", "Glasso", "LinearSVRL2"];
 
   skelettonRecoveryyDescription = new Map([
@@ -72,7 +72,8 @@ export class Graph {
     ["GES", "Greedy Equivalence Search algorithm. A score-based Bayesian algorithm that searches heuristically the graph which minimizes a likelihood score on the data. Works for Continuous or Categorical."],
     ["GIES", "Greedy Interventional Equivalence Search algorithm. The main difference with GES is that it accepts interventional data for its inference. Works for Continuous or Categorical."],
     ["PC", "Based on conditional tests on variables and sets of variables, it proved itself to be really efficient. Consider graphs < 200 variables. Works for continuous and discrete datasets"],
-    ["LiNGAM", "Linear Non-Gaussian Acyclic model. The underlying causal model is supposed to be composed of linear mechanisms and non-gaussian data. Works for Continuous data types."]
+    ["LiNGAM", "Linear Non-Gaussian Acyclic model. The underlying causal model is supposed to be composed of linear mechanisms and non-gaussian data. Works for Continuous data types."],
+    ["CGNN", "Causal Generative Neural Networks. Score-method that evaluates candidate graph by generating data following the topological order of the graph using neural networks, and using MMD for evaluation. All the possible structures are tested, which leads to a super exponential complexity. It would be preferable to start from a graph skeleton for large graphs."]
     ]);
   
   datatypes = ["Continious", "Categorical"];
@@ -163,7 +164,7 @@ export class Graph {
       return;
     }
 
-    if(this.useGraph && this.causalDiscovery == 'PC') this.recovery = "NONE";
+    if(this.useGraph && (this.causalDiscovery == 'PC' || this.causalDiscovery == 'CGNN')) this.recovery = "NONE";
 
     this.loading = true;    
     
