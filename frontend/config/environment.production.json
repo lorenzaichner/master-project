@@ -2,6 +2,6 @@
   "debug": false,
   "testing": false,
   "Api": {
-    "BaseUrl": "http://localhost:3000"
+    "BaseUrl": "http://10.0.0.166:3000"
   }
 }

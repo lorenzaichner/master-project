@@ -10,6 +10,7 @@ import { MinioClientService } from 'src/minio-client/minio-client.service';
 
 const RESULTS_REDIS_EXPIRE = config.get<number>('Results.RedisExpireSeconds');
 const loggerInstance = Logger.getInstance();
+//const pythonScript = ${cwd}/../dowhy/causal_discovery.py; for docerk 
 
 
 @Injectable()
@@ -23,7 +24,11 @@ export class CausalDiscoveryService {
         const cwd = process.cwd();
         loggerInstance.log('info', `Start generating Graph with params: ${skeletton_recovery} ${cd_algorithm} ${dataFilePath} ${delimiter} ${dataType} ${useGraph}`);
         loggerInstance.log('info', `Pythonscript location: ${cwd}/../dowhy/causal_discovery.py`); 
-        const pythonProcess = spawn('python3', [`${cwd}/../dowhy/causal_discovery.py`, skeletton_recovery, cd_algorithm, dataFilePath, delimiter, dataType, useGraph])      
+        if(cd_algorithm != "GES" && cd_algorithm != "GIES"){
+            dataType = "irrelevant";
+        } 
+        //const pythonProcess = spawn('python3', [`/home/lorenz/Documents/Bachelor/master-project/dowhy/causal_discovery.py`, skeletton_recovery, cd_algorithm, dataFilePath, delimiter, dataType, useGraph])       
+        const pythonProcess = spawn('python3', [`${cwd}/../dowhy/causal_discovery.py`, skeletton_recovery, cd_algorithm, dataFilePath, delimiter, dataType, useGraph])  
         
         pythonProcess.stdout.on('data', async (data) =>{
             console.log(new TextDecoder().decode(data))
@@ -40,7 +45,8 @@ export class CausalDiscoveryService {
 
         pythonProcess.stderr.on('error', (data) => {
             loggerInstance.log('error', 'Error executing script with ${data}')
-            console.log(data)
+            console.log(data);
+            loggerInstance.log('info',data);
             
             this.redisService.set(`causald_discovery_error:${session}`, JSON.stringify(data), RESULTS_REDIS_EXPIRE).catch(ex => {
                 loggerInstance.log('error', `storing the error in redis failed with ${ex}`);
@@ -50,7 +56,6 @@ export class CausalDiscoveryService {
         pythonProcess.on('exit', code => {
             if (code === 0) {
                 loggerInstance.log('info', `Graph successfully generated for '${dataFilePath}'`);
-
             } else {
                 loggerInstance.log('error', `Graph generation failed for '${dataFilePath}' (exited with ${code})`);
                 this.redisService.set(`causald_discovery_results_` + skeletton_recovery+`_`+cd_algorithm +`_:${session}`, "ERROR", RESULTS_REDIS_EXPIRE).catch(ex => {
