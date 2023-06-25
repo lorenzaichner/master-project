@@ -12,7 +12,7 @@ import { GeneratedGraph } from 'common/response/graph/graph.response';
 import { CausalDiscoveryState } from './causal-discovery.state';
 
 
-const CDT_GRAPH_REQUEST = 600000;
+const CDT_GRAPH_REQUEST = 60;
 const CDT_WAIT_MS_REQUEST = 5000;
 
 
