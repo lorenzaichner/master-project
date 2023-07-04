@@ -420,7 +420,6 @@ export class Graph {
   private loadCausalDiscoveryEdges(): void {
     this.graph.edges(':simple').remove();
     for(const edge of this.generateCausalDiscovery.graph) {
-      /*
       console.log(edge);
       this.graph.add({
         group: 'edges',
@@ -430,12 +429,8 @@ export class Graph {
           target: edge[1],
           directed: true
         }
-      });*/
-      this.addEdgeNodeIdFrom = edge[0],
-      this.addEdgeNodeIdTo = edge[1],
-      this.addEdge()
+      });
     }    
-    
     this.statusLine.setStatus(`Causal Discovery Graph successfully loaded.`);
   }
 

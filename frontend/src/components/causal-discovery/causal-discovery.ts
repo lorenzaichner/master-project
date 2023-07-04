@@ -56,11 +56,11 @@ export class Graph {
   skeletonRecoveryAlgoritms = ["ARD", "DecisionTreeRegression", "Glasso", "LinearSVRL2", "KendallTau"];
 
   skelettonRecoveryyDescription = new Map([
-    ["ARD", "Automatic Relevance Determination (ARD) is a Bayesian regression technique that efficiently removes irrelevant features that leads to a sparse subset. The main idea behind ARD is to regularize the solution by using a parameterized, data-dependent prior distribution that removes redundant and superfluous features."],
-    ["DecisionTreeRegression", "v1"],
-    ["Glasso", "v1"],
-    ["LinearSVRL2", "v2"],
-    ["KendallTau", "describe"]
+    ["ARD", ""],
+    ["DecisionTreeRegression", ""],
+    ["Glasso", ""],
+    ["LinearSVRL2", ""],
+    ["KendallTau", ""]
     ]);
 
 
